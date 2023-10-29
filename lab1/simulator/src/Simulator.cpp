@@ -9,7 +9,6 @@
 
 #include "Debug.h"
 #include "Simulator.h"
-#include "Scoreboard.h"
 
 namespace RISCV {
 
@@ -65,9 +64,8 @@ Simulator::Simulator(MemoryManager *memory, BranchPredictor *predictor) {
   this->memory = memory;
   this->branchPredictor = predictor;
   this->pc = 0;
-  for (int i = 0; i < REGNUM; ++i) {
-    this->reg[i] = 0;
-  }
+  for (int i = 0; i < REGNUM; ++i) { this->reg[i] = 0; }
+  for (uint32_t i = 0; i < number_of_component; i++) { fuList[i].op = i; }
 }
 
 Simulator::~Simulator() {}
@@ -592,12 +590,13 @@ void Simulator::issue() {
   if (instname != INSTNAME[insttype]) { this->panic("Unmatch instname %s with insttype %d\n", instname.c_str(), insttype); }
   // decode ENDED
 
+  executeComponent ec = getComponentUsed(insttype);
   switch (insttype) {
       // Maybe we can use the getComponentUsed function. Then get their latency
   case ADD: case SUB: // blablabla
     // check if the FU is busy
       for (uint32_t i = 0; i < num_of_comp; i++) {
-          if (this->scoreboard.fuList[i].op == fuType::intAdd && this->scoreboard.fuList[i].busy == NO && this->scoreboard.resultDepUnit[dest] == blank) {
+          if (this->scoreboard.fuList[i].op == fuType::ALU && this->scoreboard.fuList[i].busy == NO && this->scoreboard.resultDepUnit[dest] == blank) {
               // issue successfully
               // TODO
           }

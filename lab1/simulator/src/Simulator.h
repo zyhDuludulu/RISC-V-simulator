@@ -6,6 +6,8 @@
 
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
+#define NO false
+#define YES true
 
 #include <cstdarg>
 #include <cstdint>
@@ -14,7 +16,6 @@
 
 #include "BranchPredictor.h"
 #include "MemoryManager.h"
-#include "Scoreboard.h"
 
 namespace RISCV {
 
@@ -263,14 +264,31 @@ private:
     branchALU,
     iMul,
     iDiv,
-    int2FP,
-    fp2Int,
-    fpDiv,
-    fmaAdd, /* fused multiply-add unit for fp */
-    fmaMul, /* fused multiply-add unit for fp */
     number_of_component,
-    unknown = ALU,
+    blank,
   };
+
+  // MY CODE HERE
+  enum instStatus {
+      ISSUE,
+      OPERANDS,
+      COMPLETE_EXE,
+      WRITE_BACK,
+      BLANK
+  };
+
+  struct FU {
+      bool busy = NO, Rj = YES, Rk = YES;
+      uint32_t op = executeComponent::blank, Qj = executeComponent::blank, Qk = executeComponent::blank;
+      uint32_t Fi = 33, Fj = 33, Fk = 33;
+      instStatus instruction_status = instStatus::BLANK;
+      uint32_t time;
+  } fu;
+
+  executeComponent resultDepUnit[32] = { executeComponent::blank };         // store where each uncompleted data come from
+  FU fuList[executeComponent::number_of_component];                         // FU list
+  instStatus fuStatus[executeComponent::number_of_component] = { instStatus::BLANK };     // store which stage the FU is in (only useful when the FU is busy)
+  // MY CODE HERE
 
   // The lowest cycle of an datamem access
   const uint32_t datamem_lat_lower_bound = 1;
@@ -284,10 +302,6 @@ private:
     /* branchALU */ 0,
     /* iMul */      2,
     /* iDiv */      6,
-    /* int2FP */    0,
-    /* fpDiv */     24,
-    /* fmaAdd */    3,
-    /* fmaMul */    6,
   };
 
   inline executeComponent getComponentUsed(RISCV::Inst inst) {
@@ -335,11 +349,11 @@ private:
         // ...
         // return COMPONENT_TYPE; break;
         default:
-          return unknown; break;
+          return blank; break;
       }
     } // end of using namespace RISCV;
 
-    return unknown;
+    return blank;
   }
 
   struct History {
