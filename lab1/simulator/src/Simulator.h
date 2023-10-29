@@ -14,6 +14,7 @@
 
 #include "BranchPredictor.h"
 #include "MemoryManager.h"
+#include "Scoreboard.h"
 
 namespace RISCV {
 
@@ -174,6 +175,7 @@ public:
   uint32_t maximumStackSize;
   MemoryManager *memory;
   BranchPredictor *branchPredictor;
+  Scoreboard scoreboard;
 
   Simulator(MemoryManager *memory, BranchPredictor *predictor);
   ~Simulator();
@@ -364,6 +366,9 @@ private:
   void excecute();
   void memoryAccess();
   void writeBack();
+  void issue();
+  void readOperands();
+  void execution();
 
   int64_t handleSystemCall(int64_t op1, int64_t op2);
 
