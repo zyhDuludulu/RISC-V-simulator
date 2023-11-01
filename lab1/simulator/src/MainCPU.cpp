@@ -36,8 +36,9 @@ Simulator simulator(&memory, &branchPredictor);
 int main(int argc, char **argv) {
   if (!parseParameters(argc, argv)) {
     printUsage();
-    exit(-1);
+    //exit(-1);
   }
+  elfFile = "D:/Course/CS211/lab1/riscv-elf/helloworld.riscv";
 
   // Init cache
   Cache::Policy l1Policy, l2Policy, l3Policy;
@@ -76,15 +77,11 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  if (verbose) {
-    printElfInfo(&reader);
-  }
+  if (verbose) { printElfInfo(&reader); }
 
   loadElfToMemory(&reader, &memory);
 
-  if (verbose) {
-    memory.printInfo();
-  }
+  if (verbose) { memory.printInfo(); }
 
   simulator.isSingleStep = isSingleStep;
   simulator.verbose = verbose;

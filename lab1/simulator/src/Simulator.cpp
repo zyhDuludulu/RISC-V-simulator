@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <iostream>
 
 #include "Debug.h"
 #include "Simulator.h"
@@ -66,6 +67,7 @@ Simulator::Simulator(MemoryManager* memory, BranchPredictor* predictor) {
 	this->pc = 0;
 	for (int i = 0; i < REGNUM; ++i) { this->reg[i] = 0; }
 	for (uint32_t i = 0; i < number_of_component; i++) { fuList[i].type = i; }
+	for (int i = 0; i < 33; i++) { resultDepUnit[i] = executeComponent::blank; }
 }
 
 Simulator::~Simulator() {}
@@ -83,22 +85,6 @@ void Simulator::initStack(uint32_t baseaddr, uint32_t maxSize) {
 }
 
 void Simulator::simulate() {
-	// Initialize pipeline registers
-	memset(&this->fReg, 0, sizeof(this->fReg));
-	memset(&this->fRegNew, 0, sizeof(this->fRegNew));
-	memset(&this->dReg, 0, sizeof(this->dReg));
-	memset(&this->dRegNew, 0, sizeof(this->dReg));
-	memset(&this->eReg, 0, sizeof(this->eReg));
-	memset(&this->eRegNew, 0, sizeof(this->eRegNew));
-	memset(&this->mReg, 0, sizeof(this->mReg));
-	memset(&this->mRegNew, 0, sizeof(this->mRegNew));
-
-	// Insert Bubble to later pipeline stages
-	fReg.bubble = true;
-	dReg.bubble = true;
-	eReg.bubble = true;
-	mReg.bubble = true;
-
 	// Main Simulation Loop
 	while (true) {
 		if (this->reg[0] != 0) {
@@ -118,31 +104,10 @@ void Simulator::simulate() {
 
 		// THE EXECUTION ORDER of these functions are important!!!
 		// Changing them will introduce strange bugs
-		// this->fetch();
-		// this->decode();
-		// this->excecute();
-		// this->memoryAccess();
-		// this->writeBack();
 		this->issue();
 		this->readOperands();
 		this->execution();
 		this->writeBack();
-
-		if (!this->fReg.stall) this->fReg = this->fRegNew;
-		else this->fReg.stall--;
-		if (!this->dReg.stall) this->dReg = this->dRegNew;
-		else this->dReg.stall--;
-		this->eReg = this->eRegNew;
-		this->mReg = this->mRegNew;
-		memset(&this->fRegNew, 0, sizeof(this->fRegNew));
-		memset(&this->dRegNew, 0, sizeof(this->dRegNew));
-		memset(&this->eRegNew, 0, sizeof(this->eRegNew));
-		memset(&this->mRegNew, 0, sizeof(this->mRegNew));
-
-		// The Branch perdiction happens here to avoid strange bugs in branch prediction
-		if (!this->dReg.bubble && !this->dReg.stall && !this->fReg.stall && this->dReg.predictedBranch) {
-			this->pc = this->predictedPC;
-		}
 
 		this->history.cycleCount++;
 		this->history.regRecord.push_back(this->getRegInfoStr());
@@ -170,6 +135,11 @@ void Simulator::simulate() {
 void Simulator::issue() {
 	if (this->pc % 2 != 0) { this->panic("Illegal PC 0x%x!\n", this->pc); }
 
+	// handle jump
+	if (this->jump) {
+		for (int i = 0; i < 32; i++) { if (fuList[i].busy) { return; } }
+	}
+
 	uint32_t inst = this->memory->getInt(this->pc);
 	uint32_t len = 4;
 
@@ -179,10 +149,10 @@ void Simulator::issue() {
 	std::string deststr, op1str, op2str, offsetstr;
 	Inst insttype = Inst::UNKNOWN;
 	int64_t op1 = 0, op2 = 0, offset = 0; // op1, op2 and offset are values
-	RegId dest = 0, reg1 = -1, reg2 = -1; // reg1 and reg2 are operands
+	RegId dest = 0, reg1 = 32, reg2 = 32; // reg1 and reg2 are operands
 
 	// Reg for 32bit instructions
-	if (this->fReg.len == 4) // 32 bit instruction
+	if (len == 4) // 32 bit instruction
 	{
 		uint32_t opcode = inst & 0x7F;
 		uint32_t funct3 = (inst >> 12) & 0x7;
@@ -594,15 +564,19 @@ void Simulator::issue() {
 			fuList[i].busy = YES;
 			fuList[i].op = insttype;
 			fuList[i].Fi = dest;
-			fuList[i].Fj = op1; // WRONG!!!
-			fuList[i].Fk = op2; // WRONG!!!
-			fuList[i].Qj = resultDepUnit[op1]; // WRONG!!!
-			fuList[i].Qk = resultDepUnit[op2]; // WRONG!!!
+			fuList[i].Fj = reg1;
+			fuList[i].Fk = reg2;
+			fuList[i].Qj = resultDepUnit[reg1];
+			fuList[i].Qk = resultDepUnit[reg2];
+			fuList[i].op1 = op1;
+			fuList[i].op2 = op2;
+			fuList[i].offset = offset;
 			fuList[i].Rj = fuList[i].Qj == executeComponent::blank;
 			fuList[i].Rk = fuList[i].Qk == executeComponent::blank;
 			fuList[i].instruction_status = instStatus::OPERANDS;
 			fuList[i].isNew = YES;
 			this->pc += 4;
+			std::cout << instname << std::endl;
 			return;
 		}
 
@@ -651,9 +625,9 @@ void Simulator::writeBack() {
 		this->history.instCount++;
 
 		Inst inst = fuList[i].op;
-		int64_t op1 = fuList[i].Fj; // WRONG!!!
-		int64_t op2 = fuList[i].Fk; // WRONG!!!
-		int64_t offset = this->dReg.offset; // ??
+		int64_t op1 = fuList[i].op1;
+		int64_t op2 = fuList[i].op2;
+		int64_t offset = fuList[i].offset;
 
 		uint64_t dRegPC = this->pc; // ??
 		bool writeReg = false;
@@ -882,33 +856,14 @@ void Simulator::writeBack() {
 		}
 
 		// Pipeline Related Code
-		if (isBranch(inst)) {
-			if (predictedBranch == branch) {
-				this->history.predictedBranch++;
-			}
-			else {
-				// Control Hazard Here
-				this->pc = this->anotherPC;
-				this->fRegNew.bubble = true;
-				this->dRegNew.bubble = true;
-				this->history.unpredictedBranch++;
-				this->history.controlHazardCount++;
-			}
-			// this->dReg.pc: fetch original inst addr, not the modified one
-			this->branchPredictor->update(this->dReg.pc, branch);
-		}
 		if (isJump(inst)) {
 			// Control hazard here
 			this->pc = dRegPC;
-			this->fRegNew.bubble = true;
-			this->dRegNew.bubble = true;
+			this->jump = YES;
 			this->history.controlHazardCount++;
 		}
 		if (isReadMem(inst)) {
-			if (this->dRegNew.rs1 == destReg || this->dRegNew.rs2 == destReg) {
-				this->fRegNew.stall = 2;
-				this->dRegNew.stall = 2;
-				this->eRegNew.bubble = true;
+			if (fuList[i].Fj == destReg || fuList[i].Fk == destReg) {
 				this->history.cycleCount--;
 				this->history.memoryHazardCount++;
 			}
@@ -917,22 +872,19 @@ void Simulator::writeBack() {
 		// inside the execute stage, there's ALU and other components
 		// latency analysis of each instruction inside execute stage
 		uint32_t lat = this->latency[getComponentUsed(inst)];
-		// stall the fetch & decode stage to reflect the latency
-		this->fRegNew.stall = std::max<uint32_t>(lat, this->fRegNew.stall);
-		this->dRegNew.stall = std::max<uint32_t>(lat, this->dRegNew.stall);
 
 		// Check for data hazard and forward data
 		if (writeReg && destReg != 0 && !isReadMem(inst)) {
-			if (this->dRegNew.rs1 == destReg) {
-				this->dRegNew.op1 = out;
+			if (fuList[i].Fj == destReg == destReg) {
+				fuList[i].op1 = out;
 				this->executeWBReg = destReg;
 				this->executeWriteBack = true;
 				this->history.dataHazardCount++;
 				if (verbose)
 					printf("  Forward Data %s to Decode op1\n", REGNAME[destReg]);
 			}
-			if (this->dRegNew.rs2 == destReg) {
-				this->dRegNew.op2 = out;
+			if (fuList[i].Fk == destReg == destReg) {
+				fuList[i].op2 = out;
 				this->executeWBReg = destReg;
 				this->executeWriteBack = true;
 				this->history.dataHazardCount++;
@@ -943,9 +895,7 @@ void Simulator::writeBack() {
 	}
 	
 	// trun the isNew to NO !!! DO NOT FORGET IT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	for (uint32_t i = 0; i < number_of_component; i++) {
-		fuList[i].isNew = NO;
-	}
+	for (uint32_t i = 0; i < number_of_component; i++) { fuList[i].isNew = NO; }
 }
 
 

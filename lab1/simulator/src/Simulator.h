@@ -168,6 +168,7 @@ public:
 	bool isSingleStep;
 	bool verbose;
 	bool shouldDumpHistory;
+	bool jump = NO;
 	uint64_t pc;
 	uint64_t predictedPC; // for branch prediction module, predicted PC destination
 	uint64_t anotherPC; // // another possible prediction destination
@@ -191,60 +192,6 @@ public:
 	void printStatistics();
 
 private:
-	struct FReg {
-		// Control Signals
-		bool bubble;
-		uint32_t stall;
-
-		uint64_t pc;
-		uint32_t inst;
-		uint32_t len;
-	} fReg, fRegNew;
-	struct DReg {
-		// Control Signals
-		bool bubble;
-		uint32_t stall;
-		RISCV::RegId rs1, rs2;
-
-		uint64_t pc;
-		RISCV::Inst inst;
-		int64_t op1;
-		int64_t op2;
-		RISCV::RegId dest;
-		int64_t offset;
-		bool predictedBranch;
-	} dReg, dRegNew;
-	struct EReg {
-		// Control Signals
-		bool bubble;
-		uint32_t stall;
-
-		uint64_t pc;
-		RISCV::Inst inst;
-		int64_t op1;
-		int64_t op2;
-		bool writeReg;
-		RISCV::RegId destReg;
-		int64_t out;
-		bool writeMem;
-		bool readMem;
-		bool readSignExt;
-		uint32_t memLen;
-		bool branch;
-	} eReg, eRegNew;
-	struct MReg {
-		// Control Signals
-		bool bubble;
-		uint32_t stall;
-
-		uint64_t pc;
-		RISCV::Inst inst;
-		int64_t op1;
-		int64_t op2;
-		int64_t out;
-		bool writeReg;
-		RISCV::RegId destReg;
-	} mReg, mRegNew;
 
 	// Pipeline Related Variables
 	// To avoid older values(in MEM) overriding newer values(in EX)
@@ -278,16 +225,16 @@ private:
 
 	struct FU {
 		bool busy = NO, Rj = YES, Rk = YES, isNew = NO;
-		Inst op = Inst::UNKNOWN;
-		uint32_t Qj = executeComponent::blank;
-		uint32_t Qk = executeComponent::blank;
-		uint32_t type = executeComponent::blank; // FU type
-		uint32_t Fi = 33, Fj = 33, Fk = 33;
+		RISCV::Inst op = RISCV::Inst::UNKNOWN;
+		int Qj = executeComponent::blank;
+		int Qk = executeComponent::blank;
+		int type = executeComponent::blank; // FU type
+		int Fi = 32, Fj = 32, Fk = 32, op1, op2, offset;
 		instStatus instruction_status = instStatus::BLANK;
 		uint32_t time;
 	} fu;
 
-	executeComponent resultDepUnit[32] = { executeComponent::blank };         // store where each uncompleted data come from
+	executeComponent resultDepUnit[33] = { executeComponent::blank }; // store where each uncompleted data come from
 	FU fuList[executeComponent::number_of_component];                         // FU list
 	instStatus fuStatus[executeComponent::number_of_component] = { instStatus::BLANK };     // store which stage the FU is in (only useful when the FU is busy)
 	// MY CODE HERE
