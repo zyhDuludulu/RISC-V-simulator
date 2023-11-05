@@ -7,6 +7,7 @@
 #include <sstream>
 #include <string>
 #include <iostream>
+#include <iomanip>
 
 #include "Debug.h"
 #include "Simulator.h"
@@ -108,6 +109,10 @@ void Simulator::simulate() {
 		this->readOperands();
 		this->execution();
 		this->writeBack();
+		//this->printBoard();
+		if (this->pc == 0x104f4) {
+			int a = 1;
+		}
 
 		this->history.cycleCount++;
 		this->history.regRecord.push_back(this->getRegInfoStr());
@@ -136,9 +141,7 @@ void Simulator::issue() {
 	if (this->pc % 2 != 0) { this->panic("Illegal PC 0x%x!\n", this->pc); }
 
 	// handle jump
-	if (this->jump) {
-		for (int i = 0; i < 32; i++) { if (fuList[i].busy) { return; } }
-	}
+	if (this->jump) { return; }
 
 	uint32_t inst = this->memory->getInt(this->pc);
 	uint32_t len = 4;
@@ -575,8 +578,13 @@ void Simulator::issue() {
 			fuList[i].Rk = fuList[i].Qk == executeComponent::blank;
 			fuList[i].instruction_status = instStatus::OPERANDS;
 			fuList[i].isNew = YES;
-			this->pc += 4;
+			resultDepUnit[dest] = executeComponent(i);
+			printf("0x%.8x: ", this->pc);
 			std::cout << instname << std::endl;
+			this->pc += 4;
+			if (isJump(insttype) || isBranch(insttype)) { 
+				this->jump = YES; 
+			}
 			return;
 		}
 
@@ -589,9 +597,11 @@ void Simulator::issue() {
 void Simulator::readOperands() {
 	for (uint32_t i = 0; i < number_of_component; i++) {
 		if (fuList[i].instruction_status != instStatus::OPERANDS || fuList[i].isNew == YES) { continue; }
+		if (fuList[i].Rj == NO) { fuList[i].Rj = resultDepUnit[fuList[i].Fj] == executeComponent::blank; }
+		if (fuList[i].Rk == NO) { fuList[i].Rk = resultDepUnit[fuList[i].Fk] == executeComponent::blank; }
 		if (fuList[i].Rj == YES && fuList[i].Rk == YES) {
-			fuList[i].Rj == NO;
-			fuList[i].Rk == NO;
+			fuList[i].Rj = NO;
+			fuList[i].Rk = NO;
 			fuList[i].instruction_status = instStatus::COMPLETE_EXE;
 			fuList[i].isNew = YES;
 			fuList[i].time = latency[getComponentUsed(fuList[i].op)];
@@ -603,7 +613,7 @@ void Simulator::readOperands() {
 
 void Simulator::execution() {
 	for (uint32_t i = 0; i < number_of_component; i++) {
-		if (fuList[i].isNew = YES || fuList[i].instruction_status != instStatus::COMPLETE_EXE) { continue; }
+		if (fuList[i].isNew == YES || fuList[i].instruction_status != instStatus::COMPLETE_EXE) { continue; }
 		if (fuList[i].time > 0) { fuList[i].time--; }
 		else if (fuList[i].time == 0) { 
 			fuList[i].instruction_status = instStatus::WRITE_BACK; 
@@ -614,11 +624,11 @@ void Simulator::execution() {
 
 void Simulator::writeBack() {
 	for (uint32_t i = 0; i < number_of_component; i++) {
-		if (fuList[i].isNew = YES || fuList[i].instruction_status != instStatus::WRITE_BACK) { continue; }
+		if (fuList[i].isNew == YES || fuList[i].instruction_status != instStatus::WRITE_BACK) { continue; }
 		uint32_t dest = fuList[i].Fi;
 		for (uint32_t j = 0; j < number_of_component; j++) {
-			if (dest == fuList[j].Fj && fuList[j].Rj == YES) { return; }
-			if (dest == fuList[j].Fk && fuList[j].Rk == YES) { return; }
+			if (dest == fuList[j].Fj && fuList[j].Rj == YES && fuList[j].busy) { return; }
+			if (dest == fuList[j].Fk && fuList[j].Rk == YES && fuList[j].busy) { return; }
 		}
 		// write back and set yes acording to the reglist
 		// TODO
@@ -629,7 +639,7 @@ void Simulator::writeBack() {
 		int64_t op2 = fuList[i].op2;
 		int64_t offset = fuList[i].offset;
 
-		uint64_t dRegPC = this->pc; // ??
+		uint64_t dRegPC = this->pc - 4; // ??
 		bool writeReg = false;
 		RegId destReg = fuList[i].Fi;
 		int64_t out = 0;
@@ -647,6 +657,7 @@ void Simulator::writeBack() {
 		case AUIPC:
 			writeReg = true;
 			out = dRegPC + (offset << 12);
+			//std::cout << out << std::endl;
 			break;
 		case JAL:
 			writeReg = true;
@@ -667,6 +678,7 @@ void Simulator::writeBack() {
 			}
 			break;
 		case BNE:
+			//std::cout << op1 << "  " << op2 << std::endl;
 			if (op1 != op2) {
 				branch = true;
 				dRegPC = dRegPC + offset;
@@ -769,6 +781,7 @@ void Simulator::writeBack() {
 		case ADD:
 			writeReg = true;
 			out = op1 + op2;
+			//std::cout << out << std::endl;
 			break;
 		case ADDIW:
 		case ADDW:
@@ -813,8 +826,10 @@ void Simulator::writeBack() {
 			break;
 		case ANDI:
 		case AND:
+			std::cout << op1 << "  " << op2 << std::endl;
 			writeReg = true;
 			out = op1 & op2;
+			std::cout << "andi : " << out << std::endl;
 			break;
 		case SLLI:
 		case SLL:
@@ -859,8 +874,11 @@ void Simulator::writeBack() {
 		if (isJump(inst)) {
 			// Control hazard here
 			this->pc = dRegPC;
-			this->jump = YES;
+			this->jump = NO;
 			this->history.controlHazardCount++;
+		}
+		if (isBranch(inst)) {
+			this->jump = NO;
 		}
 		if (isReadMem(inst)) {
 			if (fuList[i].Fj == destReg || fuList[i].Fk == destReg) {
@@ -873,25 +891,12 @@ void Simulator::writeBack() {
 		// latency analysis of each instruction inside execute stage
 		uint32_t lat = this->latency[getComponentUsed(inst)];
 
-		// Check for data hazard and forward data
-		if (writeReg && destReg != 0 && !isReadMem(inst)) {
-			if (fuList[i].Fj == destReg == destReg) {
-				fuList[i].op1 = out;
-				this->executeWBReg = destReg;
-				this->executeWriteBack = true;
-				this->history.dataHazardCount++;
-				if (verbose)
-					printf("  Forward Data %s to Decode op1\n", REGNAME[destReg]);
-			}
-			if (fuList[i].Fk == destReg == destReg) {
-				fuList[i].op2 = out;
-				this->executeWBReg = destReg;
-				this->executeWriteBack = true;
-				this->history.dataHazardCount++;
-				if (verbose)
-					printf("  Forward Data %s to Decode op2\n", REGNAME[destReg]);
-			}
-		}
+		fuList[i].busy = NO;
+		fuList[i].instruction_status = instStatus::ISSUE;
+		// read mem unfinished
+		this->reg[dest] = out;
+		std::cout << "reg[" << dest << "]: " << out << std::endl;
+		resultDepUnit[dest] = executeComponent::blank;
 	}
 	
 	// trun the isNew to NO !!! DO NOT FORGET IT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -1023,4 +1028,14 @@ void Simulator::panic(const char* format, ...) {
 	this->dumpHistory();
 	fprintf(stderr, "Execution history and memory dump in dump.txt\n");
 	exit(-1);
+}
+
+void Simulator::printBoard() {
+	std::cout << "index, futype, busy, op, fi, fj, fk, qj, qk, rj, rk, time, status" << std::endl;
+	for (int i = 0; i < number_of_component; i++) {
+		std::cout << i << std::right << std::setw(7) << i << std::right << std::setw(8) << fuList[i].busy << std::right << std::setw(7) << fuList[i].op
+			<< std::right << std::setw(4) << fuList[i].Fi << std::right << std::setw(4) << fuList[i].Fj << std::right << std::setw(4) << fuList[i].Fk
+			<< std::right << std::setw(3) << fuList[i].Qj << std::right << std::setw(4) << fuList[i].Qk << std::right << std::setw(4) << fuList[i].Rj
+			<< std::right << std::setw(4) << fuList[i].Rk << std::right << std::setw(4) << fuList[i].time<< std::right << std::setw(6) << fuList[i].instruction_status << std::endl;
+	}
 }

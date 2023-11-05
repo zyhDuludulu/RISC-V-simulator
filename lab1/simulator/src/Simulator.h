@@ -191,6 +191,8 @@ public:
 
 	void printStatistics();
 
+	void printBoard();
+
 private:
 
 	// Pipeline Related Variables
