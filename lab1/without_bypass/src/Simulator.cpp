@@ -222,13 +222,11 @@ void Simulator::decode() {
 			int32_t(((inst >> 7) & 0x1F) | ((inst >> 20) & 0xFE0)) << 20 >> 20;
 		int32_t imm_sb = int32_t(((inst >> 7) & 0x1E) | ((inst >> 20) & 0x7E0) |
 			((inst << 4) & 0x800) | ((inst >> 19) & 0x1000))
-			<< 19 >>
-			19;
+			<< 19 >> 19;
 		int32_t imm_u = int32_t(inst) >> 12;
 		int32_t imm_uj = int32_t(((inst >> 21) & 0x3FF) | ((inst >> 10) & 0x400) |
 			((inst >> 1) & 0x7F800) | ((inst >> 12) & 0x80000))
-			<< 12 >>
-			11;
+			<< 12 >> 11;
 
 		switch (opcode) {
 		case OP_REG:
@@ -683,7 +681,7 @@ void Simulator::decode() {
 	bool predictedBranch = false;
 	if (isBranch(insttype)) {
 		predictedBranch = this->branchPredictor->predict(this->fReg.pc, insttype,
-			op1, op2, offset);
+			op1, op2, offset); // return jump or not
 		if (predictedBranch) {
 			this->predictedPC = this->fReg.pc + offset;
 			this->anotherPC = this->fReg.pc + 4;
@@ -968,23 +966,19 @@ void Simulator::excecute() {
 
 	// Pipeline Related Code
 	if (isBranch(inst)) {
-		if (predictedBranch == branch) {
-			this->history.predictedBranch++;
-		}
-		else {
-			// BUG FIX START
-			if (branch)
-				this->pc = dRegPC;
-			else
-				this->pc = this->dReg.pc + 4;
-			// BUG FIX END
-		  // Control Hazard Here
-			//this->pc = this->anotherPC;
-			this->fRegNew.bubble = true;
-			this->dRegNew.bubble = true;
-			this->history.unpredictedBranch++;
-			this->history.controlHazardCount++;
-		}
+		// BUG FIX START
+		if (branch)
+			this->pc = dRegPC;
+		else
+			this->pc = this->dReg.pc + 4;
+		// BUG FIX END
+		// Control Hazard Here
+		//this->pc = this->anotherPC;
+		this->fRegNew.bubble = true;
+		this->dRegNew.bubble = true;
+		this->history.unpredictedBranch++;
+		this->history.controlHazardCount++;
+
 		// this->dReg.pc: fetch original inst addr, not the modified one
 		this->branchPredictor->update(this->dReg.pc, branch);
 	}
