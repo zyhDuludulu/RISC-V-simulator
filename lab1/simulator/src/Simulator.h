@@ -226,7 +226,7 @@ private:
 	};
 
 	struct FU {
-		bool busy = NO, Rj = YES, Rk = YES, isNew = NO;
+		bool busy = NO, Rj = YES, Rk = YES, isNew = NO, readMem = NO;
 		RISCV::Inst op = RISCV::Inst::UNKNOWN;
 		int Qj = executeComponent::blank;
 		int Qk = executeComponent::blank;
@@ -270,7 +270,7 @@ private:
 			case ANDI: case AND:
 			case SLLI: case SLL: case SLLIW: case SLLW:
 			case SRLI: case SRL: case SRLIW: case SRLW:
-			case SRAI: case SRA: case SRAW:  case SRAIW:
+			case SRAI: case SRA: case SRAW:  case SRAIW: case ECALL:
 				return ALU; break;
 				/* When using the instructions below,
 				   ALU for memory address calculation is used */
