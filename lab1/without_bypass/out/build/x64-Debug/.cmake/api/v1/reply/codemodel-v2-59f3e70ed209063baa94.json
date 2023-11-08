@@ -1,0 +1,87 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-d0094a50bb2071803777.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.1"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "RISCV-Simulator",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "CacheOptimized::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CacheOptimized-Debug-e6b18c0565e5cb7e974e.json",
+					"name" : "CacheOptimized",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "CacheSim::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-CacheSim-Debug-4c52bd80f68a6aee9ce6.json",
+					"name" : "CacheSim",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "Simulator::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-Simulator-Debug-4c253bd0f93d9bc098aa.json",
+					"name" : "Simulator",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "ToDirenoTrace::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-ToDirenoTrace-Debug-28dc589c4cc0e8d5dfc8.json",
+					"name" : "ToDirenoTrace",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "D:/Course/CS211/cs211-lab/lab1/without_bypass/out/build/x64-Debug",
+		"source" : "D:/Course/CS211/cs211-lab/lab1/without_bypass"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

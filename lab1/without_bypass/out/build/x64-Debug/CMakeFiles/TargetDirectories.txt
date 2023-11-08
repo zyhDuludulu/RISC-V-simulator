@@ -1,0 +1,6 @@
+D:/Course/CS211/cs211-lab/lab1/without_bypass/out/build/x64-Debug/CMakeFiles/Simulator.dir
+D:/Course/CS211/cs211-lab/lab1/without_bypass/out/build/x64-Debug/CMakeFiles/CacheSim.dir
+D:/Course/CS211/cs211-lab/lab1/without_bypass/out/build/x64-Debug/CMakeFiles/CacheOptimized.dir
+D:/Course/CS211/cs211-lab/lab1/without_bypass/out/build/x64-Debug/CMakeFiles/ToDirenoTrace.dir
+D:/Course/CS211/cs211-lab/lab1/without_bypass/out/build/x64-Debug/CMakeFiles/edit_cache.dir
+D:/Course/CS211/cs211-lab/lab1/without_bypass/out/build/x64-Debug/CMakeFiles/rebuild_cache.dir
