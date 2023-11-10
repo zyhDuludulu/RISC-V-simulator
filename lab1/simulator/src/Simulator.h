@@ -231,7 +231,8 @@ private:
 		int Qj = executeComponent::blank;
 		int Qk = executeComponent::blank;
 		int type = executeComponent::blank; // FU type
-		int Fi = 32, Fj = 32, Fk = 32, op1, op2, offset;
+		int Fi = 32, Fj = 32, Fk = 32;
+		int64_t	op1, op2, offset;
 		instStatus instruction_status = instStatus::BLANK;
 		uint32_t time;
 	} fu;
@@ -248,7 +249,7 @@ private:
 
 	const uint32_t latency[number_of_component] = {
 		/* ALU */       0,
-		/* memCalc */   1,
+		/* memCalc */   0,
 		/* dataMem */   datamem_stall_lock,
 		/* branchALU */ 0,
 		/* iMul */      2,

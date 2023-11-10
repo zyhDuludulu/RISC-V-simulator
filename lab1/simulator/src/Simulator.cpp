@@ -85,6 +85,7 @@ void Simulator::initStack(uint32_t baseaddr, uint32_t maxSize) {
 	}
 }
 bool flag = false;
+bool storing = false;
 void Simulator::simulate() {
 	// Main Simulation Loop
 	while (true) {
@@ -113,9 +114,9 @@ void Simulator::simulate() {
 		this->writeBack();
 		if (flag)
 			this->printBoard();
-		if (this->pc == 0x104f4) {
-			int a = 1;
-		}
+		//if (this->pc == 0x1024c) {
+		//	int a = 1; flag = true;
+		//}
 
 		this->history.cycleCount++;
 		this->history.regRecord.push_back(this->getRegInfoStr());
@@ -155,7 +156,7 @@ void Simulator::issue() {
 	std::string deststr, op1str, op2str, offsetstr;
 	Inst insttype = Inst::UNKNOWN;
 	int64_t op1 = 0, op2 = 0, offset = 0; // op1, op2 and offset are values
-	RegId dest = 0, reg1 = 32, reg2 = 32; // reg1 and reg2 are operands
+	RegId dest = 32, reg1 = 32, reg2 = 32; // reg1 and reg2 are operands
 	bool readMem = false;
 
 	// Reg for 32bit instructions
@@ -401,6 +402,7 @@ void Simulator::issue() {
 			reg1 = rs1;
 			reg2 = rs2;
 			offset = imm_s;
+			storing = true;
 			switch (funct3) {
 			case 0x0:
 				instname = "sb";
@@ -584,7 +586,8 @@ void Simulator::issue() {
 			fuList[i].instruction_status = instStatus::OPERANDS;
 			fuList[i].isNew = YES;
 			fuList[i].readMem = readMem;
-			resultDepUnit[dest] = executeComponent(i);
+			if (dest <= 31)
+				resultDepUnit[dest] = executeComponent(i);
 			//printf("0x%.8x: ", this->pc);
 			//std::cout << instname << std::endl;
 			this->pc += 4;
@@ -628,7 +631,7 @@ void Simulator::execution() {
 		if (fuList[i].isNew == YES || fuList[i].instruction_status != instStatus::COMPLETE_EXE) { continue; }
 		if (fuList[i].time > 0) { fuList[i].time--; }
 		// case load
-		if (fuList[i].readMem) {
+		if (fuList[i].readMem && !storing) {
 			int64_t out = 0;
 			uint32_t memLen = 0;
 			bool readSignExt = false;
@@ -669,8 +672,8 @@ void Simulator::execution() {
 				std::cout << "UNKNOWN LOAD TYPE!!!" << std::endl;
 				break;
 			}
-			//std::cout << "ADDRADDRADDRADDRADDRADDRADDR:                      " << out << " " << fuList[i].op1 << " " << fuList[i].offset << std::endl;
 			uint32_t cycles = 0;
+			//std::cout << "                                                   ADDR: " << out;
 			switch (memLen) {
 			case 1:
 				if (readSignExt) { out = (int64_t)this->memory->getByte(out, &cycles); }
@@ -691,6 +694,7 @@ void Simulator::execution() {
 			default:
 				this->panic("Unknown memLen %d\n", memLen);
 			}
+			//std::cout << "     LOAD: " << out << std::endl;
 			reg[fuList[i].Fi] = out;
 			fuList[i].time = cycles;
 			fuList[i].readMem = false;
@@ -707,8 +711,8 @@ void Simulator::writeBack() {
 		if (fuList[i].isNew == YES || fuList[i].instruction_status != instStatus::WRITE_BACK) { continue; }
 		uint32_t dest = fuList[i].Fi;
 		for (uint32_t j = 0; j < number_of_component; j++) {
-			if (dest == fuList[j].Fj && fuList[j].Rj == YES && fuList[j].busy) { return; }
-			if (dest == fuList[j].Fk && fuList[j].Rk == YES && fuList[j].busy) { return; }
+			if (dest == fuList[j].Fj && fuList[j].Rj == YES && fuList[j].busy && dest != 32) { return; }
+			if (dest == fuList[j].Fk && fuList[j].Rk == YES && fuList[j].busy && dest != 32) { return; }
 		}
 		// write back and set yes acording to the reglist
 		// TODO
@@ -821,7 +825,7 @@ void Simulator::writeBack() {
 		case ADD:
 			writeReg = true;
 			out = op1 + op2;
-			//std::cout << out << std::endl;
+			//std::cout << "                          " << out << " = " << op1 << " + " << op2 << std::endl;
 			break;
 		case ADDIW:
 		case ADDW:
@@ -904,6 +908,7 @@ void Simulator::writeBack() {
 			break;
 		case ECALL:
 			out = handleSystemCall(op1, op2);
+			//std::cout << std::endl;
 			writeReg = true;
 			break;
 		default:
@@ -930,6 +935,7 @@ void Simulator::writeBack() {
 		bool good = true;
 		uint32_t cycles = 0;
 		if (writeMem) {
+			//std::cout << "                                                   ADDR: " << out;
 			switch (memLen) {
 			case 1:
 				good = this->memory->setByte(out, op2, &cycles);
@@ -946,6 +952,8 @@ void Simulator::writeBack() {
 			default:
 				this->panic("Unknown memLen %d\n", memLen);
 			}
+			//std::cout << "     STORE: " << op2 << std::endl;
+			storing = false;
 		}
 
 		if (!good) { this->panic("Invalid Mem Access!\n"); }
@@ -957,9 +965,22 @@ void Simulator::writeBack() {
 		fuList[i].busy = NO;
 		fuList[i].instruction_status = instStatus::ISSUE;
 		// read mem unfinished
-		this->reg[dest] = out;
-		//std::cout << "reg[" << dest << "]: " << out << std::endl;
-		resultDepUnit[dest] = executeComponent::blank;
+		if (dest <= 31) {
+			this->reg[dest] = out;
+			//std::cout << "reg[" << dest << "]: " << out << std::endl;
+			resultDepUnit[dest] = executeComponent::blank;
+			for (int k = 0; k < number_of_component; k++) {
+				if (fuList[k].busy == NO || fuList[k].instruction_status != instStatus::OPERANDS) { continue; }
+				if (fuList[k].Rj == NO && fuList[k].Fj == dest) { 
+					fuList[k].Rj = YES; fuList[k].op1 = out; 
+					//std::cout << "                                                    Rj " << dest << "  " << out << std::endl; 
+				}
+				if (fuList[k].Rk == NO && fuList[k].Fk == dest) { 
+					fuList[k].Rk = YES; fuList[k].op2 = out; 
+					//std::cout << "                                                    Rk " << dest << "  " << out << std::endl; 
+				}
+			}
+		}
 	}
 	
 	// trun the isNew to NO !!! DO NOT FORGET IT !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
