@@ -8,6 +8,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+#include <queue>
 
 #include "Debug.h"
 #include "Simulator.h"
@@ -86,6 +87,7 @@ void Simulator::initStack(uint32_t baseaddr, uint32_t maxSize) {
 }
 bool flag = false;
 bool storing = false;
+std::queue<Inst> LSqueue;
 void Simulator::simulate() {
 	// Main Simulation Loop
 	while (true) {
@@ -586,6 +588,8 @@ void Simulator::issue() {
 			fuList[i].instruction_status = instStatus::OPERANDS;
 			fuList[i].isNew = YES;
 			fuList[i].readMem = readMem;
+			if ((insttype >= 10 && insttype <= 19) || insttype == 45)
+				LSqueue.push(insttype);
 			if (dest <= 31)
 				resultDepUnit[dest] = executeComponent(i);
 			//printf("0x%.8x: ", this->pc);
@@ -606,14 +610,6 @@ void Simulator::issue() {
 void Simulator::readOperands() {
 	for (uint32_t i = 0; i < number_of_component; i++) {
 		if (fuList[i].instruction_status != instStatus::OPERANDS || fuList[i].isNew == YES) { continue; }
-		if (fuList[i].Rj == NO && resultDepUnit[fuList[i].Fj] == executeComponent::blank) { 
-			fuList[i].Rj = YES;
-			fuList[i].op1 = reg[fuList[i].Fj];
-		}
-		if (fuList[i].Rk == NO && resultDepUnit[fuList[i].Fk] == executeComponent::blank) {
-			fuList[i].Rk = YES;
-			fuList[i].op2 = reg[fuList[i].Fk];
-		}
 		if (fuList[i].Rj == YES && fuList[i].Rk == YES) {
 			fuList[i].Rj = NO;
 			fuList[i].Rk = NO;
@@ -631,7 +627,8 @@ void Simulator::execution() {
 		if (fuList[i].isNew == YES || fuList[i].instruction_status != instStatus::COMPLETE_EXE) { continue; }
 		if (fuList[i].time > 0) { fuList[i].time--; }
 		// case load
-		if (fuList[i].readMem && !storing) {
+		if (fuList[i].readMem && LSqueue.front() == fuList[i].op) {
+			LSqueue.pop();
 			int64_t out = 0;
 			uint32_t memLen = 0;
 			bool readSignExt = false;
@@ -673,7 +670,6 @@ void Simulator::execution() {
 				break;
 			}
 			uint32_t cycles = 0;
-			//std::cout << "                                                   ADDR: " << out;
 			switch (memLen) {
 			case 1:
 				if (readSignExt) { out = (int64_t)this->memory->getByte(out, &cycles); }
@@ -694,7 +690,6 @@ void Simulator::execution() {
 			default:
 				this->panic("Unknown memLen %d\n", memLen);
 			}
-			//std::cout << "     LOAD: " << out << std::endl;
 			reg[fuList[i].Fi] = out;
 			fuList[i].time = cycles;
 			fuList[i].readMem = false;
@@ -709,6 +704,7 @@ void Simulator::execution() {
 void Simulator::writeBack() {
 	for (uint32_t i = 0; i < number_of_component; i++) {
 		if (fuList[i].isNew == YES || fuList[i].instruction_status != instStatus::WRITE_BACK) { continue; }
+		if (i == 1 && fuList[1].op != LSqueue.front()) { continue; }
 		uint32_t dest = fuList[i].Fi;
 		for (uint32_t j = 0; j < number_of_component; j++) {
 			if (dest == fuList[j].Fj && fuList[j].Rj == YES && fuList[j].busy && dest != 32) { return; }
@@ -732,7 +728,6 @@ void Simulator::writeBack() {
 		bool readSignExt = false;
 		uint32_t memLen = 0;
 		bool branch = false;
-		// ???????????????????????????????????????????????? 完全处于一个大蒙蔽状态，感谢
 		switch (inst) {
 		case LUI:
 			writeReg = true;
@@ -803,23 +798,27 @@ void Simulator::writeBack() {
 			memLen = 1;
 			out = op1 + offset;
 			op2 = op2 & 0xFF;
+			LSqueue.pop();
 			break;
 		case SH:
 			writeMem = true;
 			memLen = 2;
 			out = op1 + offset;
 			op2 = op2 & 0xFFFF;
+			LSqueue.pop();
 			break;
 		case SW:
 			writeMem = true;
 			memLen = 4;
 			out = op1 + offset;
 			op2 = op2 & 0xFFFFFFFF;
+			LSqueue.pop();
 			break;
 		case SD:
 			writeMem = true;
 			memLen = 8;
 			out = op1 + offset;
+			LSqueue.pop();
 			break;
 		case ADDI:
 		case ADD:
@@ -971,14 +970,8 @@ void Simulator::writeBack() {
 			resultDepUnit[dest] = executeComponent::blank;
 			for (int k = 0; k < number_of_component; k++) {
 				if (fuList[k].busy == NO || fuList[k].instruction_status != instStatus::OPERANDS) { continue; }
-				if (fuList[k].Rj == NO && fuList[k].Fj == dest) { 
-					fuList[k].Rj = YES; fuList[k].op1 = out; 
-					//std::cout << "                                                    Rj " << dest << "  " << out << std::endl; 
-				}
-				if (fuList[k].Rk == NO && fuList[k].Fk == dest) { 
-					fuList[k].Rk = YES; fuList[k].op2 = out; 
-					//std::cout << "                                                    Rk " << dest << "  " << out << std::endl; 
-				}
+				if (fuList[k].Rj == NO && fuList[k].Fj == dest) { fuList[k].Rj = YES; fuList[k].op1 = out; }
+				if (fuList[k].Rk == NO && fuList[k].Fk == dest) { fuList[k].Rk = YES; fuList[k].op2 = out; }
 			}
 		}
 	}

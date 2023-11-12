@@ -239,7 +239,6 @@ private:
 
 	executeComponent resultDepUnit[33] = { executeComponent::blank }; // store where each uncompleted data come from
 	FU fuList[executeComponent::number_of_component];                         // FU list
-	instStatus fuStatus[executeComponent::number_of_component] = { instStatus::BLANK };     // store which stage the FU is in (only useful when the FU is busy)
 	// MY CODE HERE
 
 	// The lowest cycle of an datamem access

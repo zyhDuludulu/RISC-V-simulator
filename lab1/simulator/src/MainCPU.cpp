@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     printUsage();
     //exit(-1);
   }
-  elfFile = "D:/Course/CS211/lab1/riscv-elf/ackermann.riscv";
+  elfFile = "D:/Course/CS211/lab1/riscv-elf/quicksort.riscv";
 
   // Init cache
   Cache::Policy l1Policy, l2Policy, l3Policy;
