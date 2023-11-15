@@ -29,6 +29,7 @@ const char *traceFilePath;
 
 int main(int argc, char **argv) {
   if (!parseParameters(argc, argv)) {
+      std::cout << "enter the path of a .csv file." << std::endl;
     return -1;
   }
 
