@@ -205,6 +205,7 @@ void Cache::initCache() {
 }
 
 void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t *cycles) {
+  // non-inclusive
   uint32_t blockSize = this->policy.blockSize;
 
   // Initialize new block from memory
@@ -219,9 +220,9 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t *cycles) {
   uint32_t mask = ~((1 << bits) - 1);
   uint32_t blockAddrBegin = addr & mask;
   for (uint32_t i = blockAddrBegin; i < blockAddrBegin + blockSize; ++i) {
-    if (this->lowerCache == nullptr) {
+    if (this->lowerCache == nullptr) { // Last level cache
       b.data[i - blockAddrBegin] = this->memory->getByteNoCache(i);
-      if (cycles) *cycles = 100;
+      if (cycles) *cycles = 100; // latency from disk
     } else 
       b.data[i - blockAddrBegin] = this->lowerCache->getByte(i, cycles);
   }
@@ -232,8 +233,7 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t *cycles) {
   uint32_t blockIdEnd = (id + 1) * this->policy.associativity;
   uint32_t replaceId = this->getReplacementBlockId(blockIdBegin, blockIdEnd);
   Block replaceBlock = this->blocks[replaceId];
-  if (this->writeBack && replaceBlock.valid &&
-      replaceBlock.modified) { // write back to memory
+  if (this->writeBack && replaceBlock.valid && replaceBlock.modified) { // write back to memory
     this->writeBlockToLowerLevel(replaceBlock);
     this->statistics.totalCycles += this->policy.missLatency;
   }
