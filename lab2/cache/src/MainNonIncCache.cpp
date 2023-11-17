@@ -25,22 +25,40 @@ int main(int argc, char** argv) {
         printUsage();
         //return -1;
     }
-    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/non-inc.trace";
+    inclusionPolicy testPolicy = INCLUSIVE;
 
     Cache::Policy l1policy, l2policy;
     // for inclusive cache valiation, we can let L2 cache has a smaller size than L1
-    l1policy.cacheSize = 4;
-    l1policy.blockSize = 2;
-    l1policy.blockNum = 2;
-    l1policy.associativity = 1;
-    l1policy.hitLatency = 2;
-    l1policy.missLatency = 8;
-    l2policy.cacheSize = 16;
-    l2policy.blockSize = 2;
-    l2policy.blockNum = 8;
-    l2policy.associativity = 2;
-    l2policy.hitLatency = 8;
-    l2policy.missLatency = 100;
+    if (testPolicy == NONINCLUSIVE) {
+        traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/non-inc.trace";
+        l1policy.cacheSize = 4;
+        l1policy.blockSize = 2;
+        l1policy.blockNum = 2;
+        l1policy.associativity = 2;
+        l1policy.hitLatency = 2;
+        l1policy.missLatency = 8;
+        l2policy.cacheSize = 16;
+        l2policy.blockSize = 2;
+        l2policy.blockNum = 8;
+        l2policy.associativity = 2;
+        l2policy.hitLatency = 8;
+        l2policy.missLatency = 100;
+    }
+    else if (testPolicy == INCLUSIVE) {
+        traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/inclusive.trace";
+        l1policy.cacheSize = 4;
+        l1policy.blockSize = 2;
+        l1policy.blockNum = 2;
+        l1policy.associativity = 2;
+        l1policy.hitLatency = 2;
+        l1policy.missLatency = 8;
+        l2policy.cacheSize = 4;
+        l2policy.blockSize = 2;
+        l2policy.blockNum = 2;
+        l2policy.associativity = 2;
+        l2policy.hitLatency = 8;
+        l2policy.missLatency = 100;
+    }
 
     // Initialize memory and cache
     MemoryManager* memory = nullptr;
@@ -48,6 +66,9 @@ int main(int argc, char** argv) {
     memory = new MemoryManager();
     l2cache = new Cache(memory, l2policy);
     l1cache = new Cache(memory, l1policy, l2cache);
+    l2cache->setUpperCache(l1cache);
+    l1cache->inclusionPolicy = testPolicy;
+    l2cache->inclusionPolicy = testPolicy;
     memory->setCache(l1cache);
 
     // Read and execute trace in cache-trace/ folder

@@ -13,6 +13,11 @@
 #include "MemoryManager.h"
 
 class MemoryManager;
+enum inclusionPolicy {
+    INCLUSIVE,
+    EXCLUSIVE,
+    NONINCLUSIVE
+};
 
 class Cache {
 public:
@@ -33,11 +38,12 @@ public:
     uint32_t id;
     uint32_t size;
     uint32_t lastReference;
+    int64_t upperLevelBlockID = -1;
     std::vector<uint8_t> data;
     Block() {}
     Block(const Block &b)
         : valid(b.valid), modified(b.modified), tag(b.tag), id(b.id),
-          size(b.size) {
+          size(b.size), upperLevelBlockID(b.upperLevelBlockID) {
       data = b.data;
     }
   };
@@ -57,11 +63,16 @@ public:
   uint32_t getBlockId(uint32_t addr);
   uint8_t getByte(uint32_t addr, uint32_t *cycles = nullptr);
   void setByte(uint32_t addr, uint8_t val, uint32_t *cycles = nullptr);
+  void setUpperCache(Cache* upperCache) {
+      this->upperCache = upperCache;
+  }
 
   void printInfo(bool verbose);
   void printStatistics();
 
   Statistics statistics;
+  inclusionPolicy inclusionPolicy = NONINCLUSIVE;
+
 
 private:
   uint32_t referenceCounter;
@@ -69,6 +80,7 @@ private:
   bool writeAllocate; // default true
   MemoryManager *memory;
   Cache *lowerCache;
+  Cache* upperCache = nullptr;
   Policy policy;
   std::vector<Block> blocks;
 
