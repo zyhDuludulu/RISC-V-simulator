@@ -22,8 +22,10 @@ const char *traceFilePath;
 
 int main(int argc, char **argv) {
   if (!parseParameters(argc, argv)) {
-    return -1;
+      printUsage();
+      //return -1;
   }
+  traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/non-inc.trace";
 
   Cache::Policy l1policy, l2policy;
   l1policy.cacheSize = 32 * 1024;
