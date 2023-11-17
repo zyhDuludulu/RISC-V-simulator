@@ -30,4 +30,11 @@ add_executable(
     src/Cache.cpp
 )
 
+add_executable(
+    NonIncCache
+    src/MainNonIncCache.cpp
+    src/MemoryManager.cpp
+    src/Cache.cpp
+)
+
 add_executable(ToDirenoTrace src/ToDirenoTrace.cpp)
