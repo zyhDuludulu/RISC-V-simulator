@@ -19,6 +19,13 @@ enum inclusionPolicy {
 	NONINCLUSIVE
 };
 
+#define RRIPNUM 8
+enum replacementPolicy {
+	LRU,
+	RRIP,
+	OPTIMAL
+};
+
 class Cache {
 public:
 	struct Policy {
@@ -39,6 +46,7 @@ public:
 		uint32_t size;
 		uint32_t lastReference;
 		int64_t upperLevelBlockID = -1;
+		uint32_t rrpv = RRIPNUM - 1;
 		std::vector<uint8_t> data;
 		Block() {}
 		Block(const Block& b)
@@ -72,6 +80,7 @@ public:
 
 	Statistics statistics;
 	inclusionPolicy inclusionPolicy = NONINCLUSIVE;
+	replacementPolicy replacementPolicy = LRU;
 
 
 private:

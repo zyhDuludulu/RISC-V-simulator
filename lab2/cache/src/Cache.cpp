@@ -62,13 +62,14 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 		this->statistics.numHit++;
 		this->statistics.totalCycles += this->policy.hitLatency;
 		this->blocks[blockId].lastReference = this->referenceCounter;
+		this->blocks[blockId].rrpv = 0;
 		if (cycles) *cycles = this->policy.hitLatency;
-		if (this->lowerCache != nullptr)
-			std::cout << "hit!" << std::endl;
+		//if (this->lowerCache != nullptr)
+		//	std::cout << "hit!" << std::endl;
 		return this->blocks[blockId].data[offset];
 	}
-	if (this->lowerCache != nullptr)
-		std::cout << "miss! " << std::endl;
+	//if (this->lowerCache != nullptr)
+	//	std::cout << "miss! " << std::endl;
 	// Else, find the data in memory or other level of cache
 	this->statistics.numMiss++;
 	this->statistics.totalCycles += this->policy.missLatency;
@@ -99,6 +100,7 @@ void Cache::setByte(uint32_t addr, uint8_t val, uint32_t* cycles) {
 		this->blocks[blockId].modified = true;
 		this->blocks[blockId].lastReference = this->referenceCounter;
 		this->blocks[blockId].data[offset] = val;
+		this->blocks[blockId].rrpv = 0;
 		if (!this->writeBack) {
 			this->writeBlockToLowerLevel(this->blocks[blockId]);
 			this->statistics.totalCycles += this->policy.missLatency;
@@ -283,15 +285,32 @@ uint32_t Cache::getReplacementBlockId(uint32_t begin, uint32_t end) {
 	}
 
 	// Otherwise use LRU
-	uint32_t resultId = begin;
-	uint32_t min = this->blocks[begin].lastReference;
-	for (uint32_t i = begin; i < end; ++i) {
-		if (this->blocks[i].lastReference < min) {
-			resultId = i;
-			min = this->blocks[i].lastReference;
+	if (this->replacementPolicy == LRU) {
+		uint32_t resultId = begin;
+		uint32_t min = this->blocks[begin].lastReference;
+		for (uint32_t i = begin; i < end; ++i) {
+			if (this->blocks[i].lastReference < min) {
+				resultId = i;
+				min = this->blocks[i].lastReference;
+			}
 		}
+		return resultId;
 	}
-	return resultId;
+	else if (this->replacementPolicy == RRIP) {
+		uint32_t resultId = begin;
+		bool flag = true;
+		while (flag) {
+			for (uint32_t i = begin; i < end; ++i) {
+				if (this->blocks[i].rrpv == RRIPNUM - 1) {
+					resultId = i;
+					flag = false;
+					break;
+				}
+			}
+			for (uint32_t i = begin; i < end; ++i) { this->blocks[i].rrpv++; }
+		}
+		return resultId;
+	}
 }
 
 void Cache::writeBlockToLowerLevel(Cache::Block& b) {
