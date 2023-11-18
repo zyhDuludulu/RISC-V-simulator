@@ -233,7 +233,10 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 		}
 		else {
 			b.data[i - blockAddrBegin] = this->lowerCache->getByte(i, cycles);
-			lowerCache->blocks[lowerCache->getBlockId(i)].upperLevelBlockID = b.id;
+			lowerCache->blocks[lowerCache->getBlockId(i)].upperLevelBlockID = b.id; // for inclusive
+			if (this->inclusionPolicy == EXCLUSIVE) {
+				lowerCache->blocks[lowerCache->getBlockId(i)].valid = false;
+			}
 		} 
 	}
 
@@ -247,14 +250,27 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 		Block upperreplaceBlock = this->upperCache->blocks[replaceBlock.upperLevelBlockID];
 		if (upperCache->writeBack && upperreplaceBlock.valid && upperreplaceBlock.modified) {
 			upperCache->writeBlockToLowerLevel(upperreplaceBlock);
+			upperCache->statistics.totalCycles += upperCache->policy.missLatency;
 		}
 		this->upperCache->blocks[replaceBlock.upperLevelBlockID].valid = false;
+	}
+	if (inclusionPolicy == EXCLUSIVE && this->upperCache == nullptr && this->lowerCache != nullptr) {
+		uint32_t lowerid = this->lowerCache->getId(addr);
+		uint32_t lowerblockIdBegin = lowerid * this->lowerCache->policy.associativity;
+		uint32_t lowerblockIdEnd = (lowerid + 1) * this->lowerCache->policy.associativity;
+		uint32_t lowerreplaceId = this->lowerCache->getReplacementBlockId(lowerblockIdBegin, lowerblockIdEnd);
+		Block lowerreplaceBlock = this->lowerCache->blocks[lowerreplaceId]; 
+		if (lowerCache->writeBack && lowerreplaceBlock.valid && lowerreplaceBlock.modified) {
+			lowerCache->writeBlockToLowerLevel(lowerreplaceBlock);
+			lowerCache->statistics.totalCycles += lowerCache->policy.missLatency;
+		}
+		this->lowerCache->blocks[lowerreplaceId] = replaceBlock;
 	}
 	if (this->writeBack && replaceBlock.valid && replaceBlock.modified) { // write back to memory
 		this->writeBlockToLowerLevel(replaceBlock);
 		this->statistics.totalCycles += this->policy.missLatency;
 	}
-	this->blocks[replaceId].upperLevelBlockID = -1;
+	this->blocks[replaceId].upperLevelBlockID = -1; // for inclusive
 
 	this->blocks[replaceId] = b;
 }

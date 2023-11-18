@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
         printUsage();
         //return -1;
     }
-    inclusionPolicy testPolicy = INCLUSIVE;
+    inclusionPolicy testPolicy = EXCLUSIVE;
 
     Cache::Policy l1policy, l2policy;
     // for inclusive cache valiation, we can let L2 cache has a smaller size than L1
@@ -58,6 +58,26 @@ int main(int argc, char** argv) {
         l2policy.associativity = 2;
         l2policy.hitLatency = 8;
         l2policy.missLatency = 100;
+    }
+    else if (testPolicy == EXCLUSIVE) {
+        traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/exclusive.trace";
+        l1policy.cacheSize = 4;
+        l1policy.blockSize = 2;
+        l1policy.blockNum = 2;
+        l1policy.associativity = 1;
+        l1policy.hitLatency = 2;
+        l1policy.missLatency = 8;
+        l2policy.cacheSize = 4;
+        l2policy.blockSize = 2;
+        l2policy.blockNum = 2;
+        l2policy.associativity = 1;
+        l2policy.hitLatency = 8;
+        l2policy.missLatency = 100;
+    }
+    else
+    {
+        std::cout << "wrong inclusion policy!" << std::endl;
+        return -1;
     }
 
     // Initialize memory and cache
