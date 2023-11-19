@@ -19,7 +19,7 @@ enum inclusionPolicy {
 	NONINCLUSIVE
 };
 
-#define RRIPNUM 8
+#define ASSOCIATIVITY 8
 enum replacementPolicy {
 	LRU,
 	RRIP,
@@ -46,7 +46,7 @@ public:
 		uint32_t size;
 		uint32_t lastReference;
 		int64_t upperLevelBlockID = -1;
-		uint32_t rrpv = RRIPNUM - 1;
+		uint32_t rrpv = ASSOCIATIVITY - 1;
 		std::vector<uint8_t> data;
 		Block() {}
 		Block(const Block& b)
@@ -81,6 +81,10 @@ public:
 	Statistics statistics;
 	inclusionPolicy inclusionPolicy = NONINCLUSIVE;
 	replacementPolicy replacementPolicy = LRU;
+	std::vector<uint32_t> addr_trace;
+	uint32_t lenth;
+	uint32_t addrPos = 0; // after the current addr
+	bool isFound[ASSOCIATIVITY];
 
 
 private:

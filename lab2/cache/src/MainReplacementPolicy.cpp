@@ -25,19 +25,19 @@ int main(int argc, char** argv) {
         printUsage();
         //return -1;
     }
-    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/1.trace";
+    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
     Cache::Policy l1policy, l2policy;
     replacementPolicy replacementPolicy = LRU;
     l1policy.cacheSize = 32 * 1024;
     l1policy.blockSize = 64;
     l1policy.blockNum = 32 * 1024 / 64;
-    l1policy.associativity = RRIPNUM;
+    l1policy.associativity = ASSOCIATIVITY;
     l1policy.hitLatency = 2;
     l1policy.missLatency = 8;
     l2policy.cacheSize = 256 * 1024;
     l2policy.blockSize = 64;
     l2policy.blockNum = 256 * 1024 / 64;
-    l2policy.associativity = RRIPNUM;
+    l2policy.associativity = ASSOCIATIVITY;
     l2policy.hitLatency = 8;
     l2policy.missLatency = 100;
     
@@ -61,7 +61,27 @@ int main(int argc, char** argv) {
 
     char type; //'r' for read, 'w' for write
     uint32_t addr;
+    if (replacementPolicy == OPTIMAL) {
+        std::ifstream trace1(traceFilePath);
+        std::vector<uint32_t> addr_trace;
+        uint32_t lenth = 0;
+        while (trace1 >> type >> std::hex >> addr) {
+            addr_trace.push_back(addr);
+        }
+        lenth = addr_trace.size();
+        l1cache->addr_trace = addr_trace;
+        l2cache->addr_trace = addr_trace;
+        l1cache->lenth = lenth;
+        l2cache->lenth = lenth;
+    }
+    uint32_t nowPos = 0;
+    
     while (trace >> type >> std::hex >> addr) {
+        if (replacementPolicy == OPTIMAL) {
+            l1cache->addrPos = nowPos;
+            l2cache->addrPos = nowPos;
+            nowPos++;
+        }
         if (!memory->isPageExist(addr))
             memory->addPage(addr);
         switch (type) {

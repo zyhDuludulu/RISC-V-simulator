@@ -301,7 +301,7 @@ uint32_t Cache::getReplacementBlockId(uint32_t begin, uint32_t end) {
 		bool flag = true;
 		while (flag) {
 			for (uint32_t i = begin; i < end; ++i) {
-				if (this->blocks[i].rrpv == RRIPNUM - 1) {
+				if (this->blocks[i].rrpv == ASSOCIATIVITY - 1) {
 					resultId = i;
 					flag = false;
 					break;
@@ -310,6 +310,33 @@ uint32_t Cache::getReplacementBlockId(uint32_t begin, uint32_t end) {
 			for (uint32_t i = begin; i < end; ++i) { this->blocks[i].rrpv++; }
 		}
 		return resultId;
+	}
+	else if (this->replacementPolicy == OPTIMAL) {
+		uint32_t step = 0;
+		uint32_t nowPos = this->addrPos;
+		uint32_t numOfAddrFound = 0;
+		//std::cout << nowPos << " " << std::endl;
+		memset(this->isFound, false, ASSOCIATIVITY);
+		while (nowPos < this->lenth && step++ < 1000) {
+			uint32_t blockId = this->getBlockId(this->addr_trace[nowPos++]);
+			if (blockId == -1) { continue; }
+			for (uint32_t i = begin; i < end; ++i) {
+				if (numOfAddrFound >= ASSOCIATIVITY - 1) {
+					for (uint32_t j = 0; j < ASSOCIATIVITY; ++j) {
+						if (!isFound[j]) { return j + begin; }
+					}
+				}
+				if (i == blockId && !isFound[i - begin]) {
+					numOfAddrFound++;
+					isFound[i - begin] = true;
+					break;
+				}
+			}
+		}
+		for (uint32_t j = 0; j < ASSOCIATIVITY; ++j) {
+			if (!isFound[j]) { return j + begin; }
+		}
+		return begin;
 	}
 }
 
