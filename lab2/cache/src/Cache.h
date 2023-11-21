@@ -77,6 +77,7 @@ public:
 
 	void printInfo(bool verbose);
 	void printStatistics();
+	uint32_t getVictimBlockId(uint32_t addr);
 
 	Statistics statistics;
 	inclusionPolicy inclusionPolicy = NONINCLUSIVE;
@@ -85,7 +86,8 @@ public:
 	uint32_t lenth;
 	uint32_t addrPos = 0; // after the current addr
 	bool isFound[ASSOCIATIVITY];
-
+	Cache* victim = nullptr;
+	uint32_t victim_index = 0;
 
 private:
 	uint32_t referenceCounter;

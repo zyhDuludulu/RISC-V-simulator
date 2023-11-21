@@ -33,6 +33,19 @@ bool Cache::inCache(uint32_t addr) {
 	return getBlockId(addr) != -1 ? true : false;
 }
 
+uint32_t Cache::getVictimBlockId(uint32_t addr) {
+	uint32_t tag = this->getTag(addr);
+	uint32_t id = this->getId(addr);
+	for (uint32_t i = id * policy.associativity; i < (id + 1) * policy.associativity; ++i) {
+		if (this->blocks[i].id != id) {
+			fprintf(stderr, "Inconsistent ID in block %d\n", i);
+			exit(-1);
+		}
+		if (this->blocks[i].valid && this->blocks[i].tag == tag) { return id; }
+	}
+	return -1;
+}
+
 uint32_t Cache::getBlockId(uint32_t addr) {
 	uint32_t tag = this->getTag(addr);
 	uint32_t id = this->getId(addr);
@@ -70,6 +83,45 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 	}
 	//if (this->lowerCache != nullptr)
 	//	std::cout << "miss! " << std::endl;
+	// victim
+	if (this->victim != nullptr) {
+		uint32_t victId = this->victim->getVictimBlockId(addr);
+		uint32_t id = this->getId(addr);
+		uint32_t blockIdBegin = id * this->policy.associativity;
+		uint32_t blockIdEnd = (id + 1) * this->policy.associativity;
+		uint32_t replaceId = this->getReplacementBlockId(blockIdBegin, blockIdEnd);
+		Block replaceBlock = this->blocks[replaceId];
+		if (victId != -1) {
+			// Find replace block
+			Block b;
+			b.valid = true;
+			b.modified = this->victim->blocks[victId].modified;
+			b.tag = this->getTag(addr);
+			b.id = this->getId(addr);
+			b.size = this->policy.blockSize;
+			b.data = std::vector<uint8_t>(b.size);
+			if (this->writeBack && replaceBlock.valid && replaceBlock.modified) { // write back to memory
+				this->writeBlockToLowerLevel(replaceBlock);
+				this->statistics.totalCycles += this->policy.missLatency;
+			}
+			this->statistics.totalCycles += this->victim->policy.missLatency;
+
+			this->blocks[replaceId] = b;
+			uint32_t offset = this->getOffset(addr);
+			this->blocks[replaceId].lastReference = this->referenceCounter;
+			return this->blocks[replaceId].data[offset];
+		} else { 
+			Block b;
+			b.valid = true;
+			b.modified = replaceBlock.modified;
+			b.tag = this->victim->getTag(addr);
+			b.id = this->victim->getId(addr);
+			b.size = this->victim->policy.blockSize;
+			b.data = std::vector<uint8_t>(b.size);
+			this->victim->blocks[this->victim->victim_index] = b;
+			this->victim->victim_index = (this->victim->victim_index + 1) % this->victim->policy.associativity;
+		}
+	}
 	// Else, find the data in memory or other level of cache
 	this->statistics.numMiss++;
 	this->statistics.totalCycles += this->policy.missLatency;
@@ -211,6 +263,19 @@ void Cache::initCache() {
 		b.lastReference = 0;
 		b.data = std::vector<uint8_t>(b.size);
 	}
+	if (this->victim != nullptr) {
+		this->victim->blocks = std::vector<Block>(this->victim->policy.blockNum);
+		for (uint32_t i = 0; i < this->victim->blocks.size(); ++i) {
+			Block& b = this->victim->blocks[i];
+			b.valid = false;
+			b.modified = false;
+			b.size = this->victim->policy.blockSize;
+			b.tag = 0;
+			b.id = i / policy.associativity;
+			b.lastReference = 0;
+			b.data = std::vector<uint8_t>(b.size);
+		}
+	}
 }
 
 void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
@@ -248,6 +313,7 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 	uint32_t blockIdEnd = (id + 1) * this->policy.associativity;
 	uint32_t replaceId = this->getReplacementBlockId(blockIdBegin, blockIdEnd);
 	Block replaceBlock = this->blocks[replaceId];
+
 	if (inclusionPolicy == INCLUSIVE && this->upperCache != nullptr && replaceBlock.upperLevelBlockID != -1) { // Back invalidation
 		Block upperreplaceBlock = this->upperCache->blocks[replaceBlock.upperLevelBlockID];
 		if (upperCache->writeBack && upperreplaceBlock.valid && upperreplaceBlock.modified) {

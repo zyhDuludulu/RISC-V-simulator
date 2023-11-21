@@ -44,4 +44,10 @@ add_executable(
     src/Cache.cpp
 )
 
+add_executable(
+    VictimCacheTest
+    src/MainVictimCache.cpp
+    src/MemoryManager.cpp
+    src/Cache.cpp
+)
 add_executable(ToDirenoTrace src/ToDirenoTrace.cpp)
