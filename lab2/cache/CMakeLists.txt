@@ -37,4 +37,11 @@ add_executable(
     src/Cache.cpp
 )
 
+add_executable(
+    ReplacementPolicyTest
+    src/MainReplacementPolicy.cpp
+    src/MemoryManager.cpp
+    src/Cache.cpp
+)
+
 add_executable(ToDirenoTrace src/ToDirenoTrace.cpp)
