@@ -25,7 +25,7 @@ int main(int argc, char** argv) {
         printUsage();
         //return -1;
     }
-    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/non-inc.trace";
+    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
 
     Cache::Policy l1policy, l2policy, victpolicy;
     l1policy.cacheSize = 32 * 1024;
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
     l2cache = new Cache(memory, l2policy);
     l1cache = new Cache(memory, l1policy, l2cache);
     victcache = new Cache(memory, victpolicy);
-    l1cache->victim = victpolicy;
+    l1cache->victim = victcache;
     memory->setCache(l1cache);
 
     // Read and execute trace in cache-trace/ folder
