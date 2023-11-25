@@ -22,7 +22,7 @@ void printUsage();
 const char* traceFilePath;
 replacementPolicy replacementPolicyList[] = { RRIP, LRU };
 std::string replacementPolicyString[] = { "RRIP", "LRU" };
-replacementPolicy myRPolicy;
+replacementPolicy myRPolicy = LRU;
 std::string myRPolicyString;
 
 int main(int argc, char** argv) {
@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
     std::cout << "replacement Policy: " << myRPolicyString << std::endl;
     //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
     Cache::Policy l1policy, l2policy;
-    replacementPolicy rePolicy = RRIP;
+    replacementPolicy rePolicy = myRPolicy;
     l1policy.cacheSize = 32 * 1024;
     l1policy.blockSize = 64;
     l1policy.blockNum = 32 * 1024 / 64;
