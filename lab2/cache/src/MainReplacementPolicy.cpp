@@ -22,15 +22,16 @@ void printUsage();
 const char* traceFilePath;
 replacementPolicy replacementPolicyList[] = { RRIP, LRU };
 std::string replacementPolicyString[] = { "RRIP", "LRU" };
-inclusionPolicy inclusionPolicyList[] = { INCLUSIVE, EXCLUSIVE, NONINCLUSIVE };
-std::string inlcusionPolicyString[] = { "INCLUSIVE", "EXCLUSIVE", "NON-INCLUSIVE" };
+replacementPolicy myRPolicy;
+std::string myRPolicyString;
 
 int main(int argc, char** argv) {
     if (!parseParameters(argc, argv)) {
         printUsage();
-        //return -1;
+        return -1;
     }
-    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
+    std::cout << "replacement Policy: " << myRPolicyString << std::endl;
+    //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
     Cache::Policy l1policy, l2policy;
     replacementPolicy rePolicy = RRIP;
     l1policy.cacheSize = 32 * 1024;
@@ -120,7 +121,8 @@ bool parseParameters(int argc, char** argv) {
             std::string* index = std::find(replacementPolicyString, 
                 replacementPolicyString + sizeof(replacementPolicyString) / sizeof(replacementPolicyString[0]),
                 argv[2]);
-            std::cout << replacementPolicyString[index - replacementPolicyString];
+            myRPolicy = replacementPolicyList[index - replacementPolicyString];
+            myRPolicyString = replacementPolicyString[index - replacementPolicyString];
         }
         return true;
     }
