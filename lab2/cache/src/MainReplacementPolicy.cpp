@@ -117,10 +117,10 @@ bool parseParameters(int argc, char** argv) {
     if (argc > 1) {
         traceFilePath = argv[1];
         if (argc > 2) {
-            replacementPolicy* index = std::find(replacementPolicyList, 
-                replacementPolicyList + sizeof(replacementPolicyList) / sizeof(replacementPolicyList[0]), 
+            std::string* index = std::find(replacementPolicyString, 
+                replacementPolicyString + sizeof(replacementPolicyString) / sizeof(replacementPolicyString[0]),
                 argv[2]);
-            std::cout << replacementPolicyString[index - replacementPolicyList];
+            std::cout << replacementPolicyString[index - replacementPolicyString];
         }
         return true;
     }
