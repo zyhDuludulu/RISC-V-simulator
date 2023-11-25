@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
     uint32_t addr;
     uint32_t nowPos = 0;
 
+    int i = 1;
     while (trace >> type >> std::hex >> addr) {
         if (!memory->isPageExist(addr))
             memory->addPage(addr);
