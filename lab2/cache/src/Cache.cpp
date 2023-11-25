@@ -311,7 +311,7 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 	uint32_t replaceId = this->getReplacementBlockId(blockIdBegin, blockIdEnd);
 	Block replaceBlock = this->blocks[replaceId];
 
-	if (inclusionPolicy == INCLUSIVE && this->upperCache != nullptr && replaceBlock.upperLevelBlockID != -1) { // Back invalidation
+	if (iPolicy == INCLUSIVE && this->upperCache != nullptr && replaceBlock.upperLevelBlockID != -1) { // Back invalidation
 		Block upperreplaceBlock = this->upperCache->blocks[replaceBlock.upperLevelBlockID];
 		if (upperCache->writeBack && upperreplaceBlock.valid && upperreplaceBlock.modified) {
 			upperCache->writeBlockToLowerLevel(upperreplaceBlock);
@@ -319,7 +319,7 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 		}
 		this->upperCache->blocks[replaceBlock.upperLevelBlockID].valid = false;
 	}
-	if (inclusionPolicy == EXCLUSIVE && this->upperCache == nullptr && this->lowerCache != nullptr) {
+	if (iPolicy == EXCLUSIVE && this->upperCache == nullptr && this->lowerCache != nullptr) {
 		uint32_t lowerBlockId = this->lowerCache->getBlockId(addr);
 		if (lowerBlockId != -1) {
 			this->lowerCache->blocks[lowerBlockId].valid = false;
@@ -342,7 +342,7 @@ uint32_t Cache::getReplacementBlockId(uint32_t begin, uint32_t end) {
 	}
 
 	// Otherwise use LRU
-	if (this->replacementPolicy == LRU) {
+	if (this->rPolicy == LRU) {
 		uint32_t resultId = begin;
 		uint32_t min = this->blocks[begin].lastReference;
 		for (uint32_t i = begin; i < end; ++i) {
@@ -353,7 +353,7 @@ uint32_t Cache::getReplacementBlockId(uint32_t begin, uint32_t end) {
 		}
 		return resultId;
 	}
-	else if (this->replacementPolicy == RRIP) {
+	else if (this->rPolicy == RRIP) {
 		uint32_t resultId = begin;
 		bool flag = true;
 		while (flag) {
@@ -368,7 +368,7 @@ uint32_t Cache::getReplacementBlockId(uint32_t begin, uint32_t end) {
 		}
 		return resultId;
 	}
-	else if (this->replacementPolicy == OPTIMAL) {
+	else if (this->rPolicy == OPTIMAL) {
 		uint32_t step = 0;
 		uint32_t nowPos = this->addrPos;
 		uint32_t numOfAddrFound = 0;

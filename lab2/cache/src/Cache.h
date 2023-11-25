@@ -80,8 +80,8 @@ public:
 	uint32_t getVictimBlockId(uint32_t addr);
 
 	Statistics statistics;
-	inclusionPolicy inclusionPolicy = NONINCLUSIVE;
-	replacementPolicy replacementPolicy = LRU;
+	inclusionPolicy iPolicy = NONINCLUSIVE;
+	replacementPolicy rPolicy = LRU;
 	std::vector<uint32_t> addr_trace;
 	uint32_t lenth;
 	uint32_t addrPos = 0; // after the current addr

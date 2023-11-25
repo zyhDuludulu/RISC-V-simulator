@@ -61,10 +61,10 @@ int main(int argc, char** argv) {
                 memory = new MemoryManager();
                 l2cache = new Cache(memory, l2policy);
                 l1cache = new Cache(memory, l1policy, l2cache);
-                l1cache->replacementPolicy = l1replacementPolicy;
-                l2cache->replacementPolicy = l2replacementPolicy;
-                l1cache->inclusionPolicy = inclusionPolicy;
-                l2cache->inclusionPolicy = inclusionPolicy;
+                l1cache->rPolicy = l1replacementPolicy;
+                l2cache->rPolicy = l2replacementPolicy;
+                l1cache->iPolicy = inclusionPolicy;
+                l2cache->iPolicy = inclusionPolicy;
                 memory->setCache(l1cache);
 
                 // Read and execute trace in cache-trace/ folder
