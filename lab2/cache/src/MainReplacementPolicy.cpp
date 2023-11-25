@@ -53,8 +53,8 @@ int main(int argc, char** argv) {
     memory = new MemoryManager();
     l2cache = new Cache(memory, l2policy);
     l1cache = new Cache(memory, l1policy, l2cache);
-    l1cache->replacementPolicy = replacementPolicy;
-    l2cache->replacementPolicy = replacementPolicy;
+    l1cache->rPolicy = replacementPolicy;
+    l2cache->rPolicy = replacementPolicy;
     memory->setCache(l1cache);
 
     // Read and execute trace in cache-trace/ folder

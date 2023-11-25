@@ -87,8 +87,8 @@ int main(int argc, char** argv) {
     l2cache = new Cache(memory, l2policy);
     l1cache = new Cache(memory, l1policy, l2cache);
     l2cache->setUpperCache(l1cache);
-    l1cache->inclusionPolicy = testPolicy;
-    l2cache->inclusionPolicy = testPolicy;
+    l1cache->iPolicy = testPolicy;
+    l2cache->iPolicy = testPolicy;
     memory->setCache(l1cache);
 
     // Read and execute trace in cache-trace/ folder
