@@ -10,6 +10,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "Cache.h"
 #include "Debug.h"
@@ -19,6 +20,10 @@ bool parseParameters(int argc, char** argv);
 void printUsage();
 
 const char* traceFilePath;
+replacementPolicy replacementPolicyList[] = { RRIP, LRU };
+std::string replacementPolicyString[] = { "RRIP", "LRU" };
+inclusionPolicy inclusionPolicyList[] = { INCLUSIVE, EXCLUSIVE, NONINCLUSIVE };
+std::string inlcusionPolicyString[] = { "INCLUSIVE", "EXCLUSIVE", "NON-INCLUSIVE" };
 
 int main(int argc, char** argv) {
     if (!parseParameters(argc, argv)) {
@@ -111,6 +116,12 @@ bool parseParameters(int argc, char** argv) {
     // Read Parameters
     if (argc > 1) {
         traceFilePath = argv[1];
+        if (argc > 2) {
+            replacementPolicy* index = std::find(replacementPolicyList, 
+                replacementPolicyList + sizeof(replacementPolicyList) / sizeof(replacementPolicyList[0]), 
+                argv[2]);
+            std::cout << replacementPolicyString[index - replacementPolicyList];
+        }
         return true;
     }
     else {
