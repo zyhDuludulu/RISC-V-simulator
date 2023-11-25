@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
     }
     traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
     Cache::Policy l1policy, l2policy;
-    replacementPolicy replacementPolicy = RRIP;
+    replacementPolicy rePolicy = RRIP;
     l1policy.cacheSize = 32 * 1024;
     l1policy.blockSize = 64;
     l1policy.blockNum = 32 * 1024 / 64;
@@ -53,8 +53,8 @@ int main(int argc, char** argv) {
     memory = new MemoryManager();
     l2cache = new Cache(memory, l2policy);
     l1cache = new Cache(memory, l1policy, l2cache);
-    l1cache->rPolicy = replacementPolicy;
-    l2cache->rPolicy = replacementPolicy;
+    l1cache->rPolicy = rePolicy;
+    l2cache->rPolicy = rePolicy;
     memory->setCache(l1cache);
 
     // Read and execute trace in cache-trace/ folder
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
 
     char type; //'r' for read, 'w' for write
     uint32_t addr;
-    if (replacementPolicy == OPTIMAL) {
+    if (rePolicy == OPTIMAL) {
         std::ifstream trace1(traceFilePath);
         std::vector<uint32_t> addr_trace;
         uint32_t lenth = 0;
@@ -82,7 +82,7 @@ int main(int argc, char** argv) {
     uint32_t nowPos = 0;
     
     while (trace >> type >> std::hex >> addr) {
-        if (replacementPolicy == OPTIMAL) {
+        if (rePolicy == OPTIMAL) {
             l1cache->addrPos = nowPos;
             l2cache->addrPos = nowPos;
             nowPos++;
