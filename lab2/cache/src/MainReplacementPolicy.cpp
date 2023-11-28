@@ -4,6 +4,7 @@
  * Created by He, Hao at 2019/04/30
  */
 
+// usage: ./ReplacementPolicyTest [trace-file] [replacement policy]
 #include <cstdint>
 #include <cstdlib>
 #include <fstream>

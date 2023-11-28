@@ -19,17 +19,21 @@ bool parseParameters(int argc, char** argv);
 void printUsage();
 
 const char* traceFilePath;
+inclusionPolicy inclusionPolicyList[] = { INCLUSIVE, EXCLUSIVE, NONINCLUSIVE };
+std::string inclusionPolicyString[] = { "INCLUSIVE", "EXCLUSIVE", "NON-INCLUSIVE" };
+inclusionPolicy myIPolicy = NONINCLUSIVE;
+std::string myIPolicyString;
 
 int main(int argc, char** argv) {
     if (!parseParameters(argc, argv)) {
         printUsage();
-        //return -1;
+        return -1;
     }
-    inclusionPolicy testPolicy = EXCLUSIVE;
-
+    //inclusionPolicy testPolicy = EXCLUSIVE;
+    std::cout << "inclusion Policy: " << myIPolicyString << std::endl;
     Cache::Policy l1policy, l2policy;
     // for inclusive cache valiation, we can let L2 cache has a smaller size than L1
-    if (testPolicy == NONINCLUSIVE) {
+    if (myIPolicy == NONINCLUSIVE) {
         traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/non-inc.trace";
         l1policy.cacheSize = 4;
         l1policy.blockSize = 2;
@@ -44,7 +48,7 @@ int main(int argc, char** argv) {
         l2policy.hitLatency = 8;
         l2policy.missLatency = 100;
     }
-    else if (testPolicy == INCLUSIVE) {
+    else if (myIPolicy == INCLUSIVE) {
         traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/inclusive.trace";
         l1policy.cacheSize = 4;
         l1policy.blockSize = 2;
@@ -59,7 +63,7 @@ int main(int argc, char** argv) {
         l2policy.hitLatency = 8;
         l2policy.missLatency = 100;
     }
-    else if (testPolicy == EXCLUSIVE) {
+    else if (myIPolicy == EXCLUSIVE) {
         traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/exclusive.trace";
         l1policy.cacheSize = 4;
         l1policy.blockSize = 2;
@@ -87,8 +91,8 @@ int main(int argc, char** argv) {
     l2cache = new Cache(memory, l2policy);
     l1cache = new Cache(memory, l1policy, l2cache);
     l2cache->setUpperCache(l1cache);
-    l1cache->iPolicy = testPolicy;
-    l2cache->iPolicy = testPolicy;
+    l1cache->iPolicy = myIPolicy;
+    l2cache->iPolicy = myIPolicy;
     memory->setCache(l1cache);
 
     // Read and execute trace in cache-trace/ folder
@@ -130,6 +134,13 @@ bool parseParameters(int argc, char** argv) {
     // Read Parameters
     if (argc > 1) {
         traceFilePath = argv[1];
+        if (argc > 2) {
+            std::string* index = std::find(inclusionPolicyString,
+                inclusionPolicyString + sizeof(inclusionPolicyString) / sizeof(inclusionPolicyString[0]),
+                argv[2]);
+            myIPolicy = inclusionPolicyList[index - inclusionPolicyString];
+            myIPolicyString = inclusionPolicyString[index - inclusionPolicyString];
+        }
         return true;
     }
     else {
