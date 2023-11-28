@@ -19,13 +19,18 @@ bool parseParameters(int argc, char** argv);
 void printUsage();
 
 const char* traceFilePath;
+bool with_victim = false;
 
 int main(int argc, char** argv) {
     if (!parseParameters(argc, argv)) {
         printUsage();
-        //return -1;
+        return -1;
     }
-    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
+    //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
+    if (with_victim)
+        std::cout << "with victim cache" << std::endl;
+    else
+        std::cout << "without victim cache" << std::endl;
 
     Cache::Policy l1policy, l2policy, victpolicy;
     l1policy.cacheSize = 32 * 1024;
@@ -54,7 +59,8 @@ int main(int argc, char** argv) {
     l2cache = new Cache(memory, l2policy);
     l1cache = new Cache(memory, l1policy, l2cache);
     victcache = new Cache(memory, victpolicy);
-    l1cache->victim = victcache;
+    if (with_victim)
+        l1cache->victim = victcache;
     memory->setCache(l1cache);
 
     // Read and execute trace in cache-trace/ folder
@@ -96,6 +102,9 @@ bool parseParameters(int argc, char** argv) {
     // Read Parameters
     if (argc > 1) {
         traceFilePath = argv[1];
+        if (argc > 2 && argv[2] == "V") {
+            with_victim = true;
+        }
         return true;
     }
     else {
