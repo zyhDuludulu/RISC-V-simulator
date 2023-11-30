@@ -31,8 +31,8 @@ add_executable(
 )
 
 add_executable(
-    NonIncCache
-    src/MainNonIncCache.cpp
+    InclusionPolicyTest
+    src/MainInclusionPolicy.cpp
     src/MemoryManager.cpp
     src/Cache.cpp
 )
