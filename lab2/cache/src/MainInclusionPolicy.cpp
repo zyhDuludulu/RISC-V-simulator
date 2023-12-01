@@ -34,7 +34,7 @@ int main(int argc, char** argv) {
     Cache::Policy l1policy, l2policy;
     // for inclusive cache valiation, we can let L2 cache has a smaller size than L1
     if (myIPolicy == NONINCLUSIVE) {
-        traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/non-inc.trace";
+        //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/non-inc.trace";
         l1policy.cacheSize = 4;
         l1policy.blockSize = 2;
         l1policy.blockNum = 2;
@@ -49,7 +49,7 @@ int main(int argc, char** argv) {
         l2policy.missLatency = 100;
     }
     else if (myIPolicy == INCLUSIVE) {
-        traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/inclusive.trace";
+        //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/inclusive.trace";
         l1policy.cacheSize = 4;
         l1policy.blockSize = 2;
         l1policy.blockNum = 2;
@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
         l2policy.missLatency = 100;
     }
     else if (myIPolicy == EXCLUSIVE) {
-        traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/exclusive.trace";
+        //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/exclusive.trace";
         l1policy.cacheSize = 4;
         l1policy.blockSize = 2;
         l1policy.blockNum = 2;

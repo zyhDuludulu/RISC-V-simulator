@@ -27,9 +27,9 @@ std::string inlcusionPolicyString[] = { "INCLUSIVE", "EXCLUSIVE", "NON-INCLUSIVE
 int main(int argc, char** argv) {
     if (!parseParameters(argc, argv)) {
         printUsage();
-        //return -1;
+        return -1;
     }
-    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/cross.trace";
+    //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/cross.trace";
     for (int i = 0; i < 2; ++i) {
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 2; ++k) {
