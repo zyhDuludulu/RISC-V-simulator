@@ -86,13 +86,15 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 	// victim
 	if (this->victim != nullptr) {
 		uint32_t victId = this->victim->getVictimBlockId(addr);
-		uint32_t id = this->getId(addr);
-		uint32_t blockIdBegin = id * this->policy.associativity;
-		uint32_t blockIdEnd = (id + 1) * this->policy.associativity;
-		uint32_t replaceId = this->getReplacementBlockId(blockIdBegin, blockIdEnd);
-		Block replaceBlock = this->blocks[replaceId];
 		if (victId != -1) {
+			this->victim->statistics.numHit++;
+			this->statistics.numHit++;
 			// Find replace block
+			uint32_t id = this->getId(addr);
+			uint32_t blockIdBegin = id * this->policy.associativity;
+			uint32_t blockIdEnd = (id + 1) * this->policy.associativity;
+			uint32_t replaceId = this->getReplacementBlockId(blockIdBegin, blockIdEnd);
+			Block replaceBlock = this->blocks[replaceId];
 			Block b;
 			b.valid = true;
 			b.modified = this->victim->blocks[victId].modified;
@@ -104,22 +106,11 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 				this->writeBlockToLowerLevel(replaceBlock);
 				this->statistics.totalCycles += this->policy.missLatency;
 			}
-			this->statistics.totalCycles += this->victim->policy.missLatency;
 
 			this->blocks[replaceId] = b;
 			uint32_t offset = this->getOffset(addr);
 			this->blocks[replaceId].lastReference = this->referenceCounter;
 			return this->blocks[replaceId].data[offset];
-		} else { 
-			Block b;
-			b.valid = true;
-			b.modified = replaceBlock.modified;
-			b.tag = this->victim->getTag(addr);
-			b.id = this->victim->getId(addr);
-			b.size = this->victim->policy.blockSize;
-			b.data = std::vector<uint8_t>(b.size);
-			this->victim->blocks[this->victim->victim_index] = b;
-			this->victim->victim_index = (this->victim->victim_index + 1) % this->victim->policy.associativity;
 		}
 	}
 	// Else, find the data in memory or other level of cache
@@ -310,6 +301,19 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 	uint32_t blockIdEnd = (id + 1) * this->policy.associativity;
 	uint32_t replaceId = this->getReplacementBlockId(blockIdBegin, blockIdEnd);
 	Block replaceBlock = this->blocks[replaceId];
+
+	// victim
+	if (this->victim != nullptr) {
+		Block b;
+		b.valid = true;
+		b.modified = replaceBlock.modified;
+		b.tag = this->victim->getTag(replaceBlock.id);
+		b.id = this->victim->getId(replaceBlock.id);
+		b.size = this->victim->policy.blockSize;
+		b.data = std::vector<uint8_t>(b.size);
+		this->victim->blocks[this->victim->victim_index] = b;
+		this->victim->victim_index = (this->victim->victim_index + 1) % this->victim->policy.associativity;
+	}
 
 	if (iPolicy == INCLUSIVE && this->upperCache != nullptr && replaceBlock.upperLevelBlockID != -1) { // Back invalidation
 		Block upperreplaceBlock = this->upperCache->blocks[replaceBlock.upperLevelBlockID];

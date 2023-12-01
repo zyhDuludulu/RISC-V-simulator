@@ -94,7 +94,7 @@ int main(int argc, char** argv) {
     printf("L1 Cache:\n");
     l1cache->printStatistics();
     if (with_victim) {
-        l1cache->victim->printStatistics();
+        std::cout << "Victim cache Hit: " << l1cache->victim->statistics.numHit << std::endl;
         delete l1cache->victim;
     }
 
