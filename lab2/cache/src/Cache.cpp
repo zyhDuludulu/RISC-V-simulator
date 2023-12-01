@@ -35,7 +35,6 @@ bool Cache::inCache(uint32_t addr) {
 
 uint32_t Cache::getVictimBlockId(uint32_t addr) {
 	uint32_t tag = this->getTag(addr);
-	uint32_t id = this->getId(addr);
 	for (uint32_t i = 0; i < policy.associativity; ++i) {
 		if (this->blocks[i].valid && this->blocks[i].tag == tag) { return i; }
 	}
@@ -85,6 +84,7 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 		if (victId != -1) {
 			this->victim->statistics.numHit++;
 			this->statistics.numHit++;
+			this->statistics.totalCycles++;
 			// Find replace block
 			uint32_t id = this->getId(addr);
 			uint32_t blockIdBegin = id * this->policy.associativity;
@@ -299,12 +299,12 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 	Block replaceBlock = this->blocks[replaceId];
 
 	// victim
-	if (this->victim != nullptr) {
+	if (this->victim != nullptr && replaceBlock.valid) {
 		Block b;
 		b.valid = true;
 		b.modified = replaceBlock.modified;
-		b.tag = this->victim->getTag(replaceBlock.id);
-		b.id = this->victim->getId(replaceBlock.id);
+		b.tag = (replaceBlock.tag << log2i(policy.blockNum / policy.associativity)) + replaceBlock.id;
+		b.id = 0;
 		b.size = this->victim->policy.blockSize;
 		b.data = std::vector<uint8_t>(b.size);
 		this->victim->blocks[this->victim->victim_index] = b;

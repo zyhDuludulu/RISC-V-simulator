@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
         printUsage();
         return -1;
     }
-    //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/optimal.trace";
+    //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/victim.trace";
     if (with_victim)
         std::cout << "with victim cache" << std::endl;
     else
