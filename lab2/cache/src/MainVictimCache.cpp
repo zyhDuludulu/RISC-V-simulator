@@ -33,16 +33,16 @@ int main(int argc, char** argv) {
         std::cout << "without victim cache" << std::endl;
 
     Cache::Policy l1policy, l2policy, victpolicy;
-    l1policy.cacheSize = 32 * 1024;
+    l1policy.cacheSize = 2 * 1024;
     l1policy.blockSize = 64;
-    l1policy.blockNum = 32 * 1024 / 64;
+    l1policy.blockNum = 2 * 1024 / 64;
     l1policy.associativity = 8;
     l1policy.hitLatency = 2;
     l1policy.missLatency = 8;
 
-    l2policy.cacheSize = 256 * 1024;
+    l2policy.cacheSize = 32 * 1024;
     l2policy.blockSize = 64;
-    l2policy.blockNum = 256 * 1024 / 64;
+    l2policy.blockNum = 32 * 1024 / 64;
     l2policy.associativity = 8;
     l2policy.hitLatency = 8;
     l2policy.missLatency = 100;
