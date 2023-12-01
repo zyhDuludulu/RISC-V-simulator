@@ -322,7 +322,17 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 	if (iPolicy == EXCLUSIVE && this->upperCache == nullptr && this->lowerCache != nullptr) {
 		uint32_t lowerBlockId = this->lowerCache->getBlockId(addr);
 		if (lowerBlockId != -1) { this->lowerCache->blocks[lowerBlockId].valid = false; }
-		this->writeBlockToLowerLevel(replaceBlock);
+		if (replaceBlock.valid) {
+			auto cycles = this->lowerCache->statistics.totalCycles;
+			auto hit = this->lowerCache->statistics.numHit;
+			auto miss = this->lowerCache->statistics.numMiss;
+			this->writeBlockToLowerLevel(replaceBlock);
+			this->lowerCache->statistics.numWrite--;
+			this->lowerCache->referenceCounter--;
+			this->lowerCache->statistics.totalCycles = cycles;
+			this->lowerCache->statistics.numHit = hit;
+			this->lowerCache->statistics.numMiss = miss;
+		}
 	}
 	if (this->writeBack && replaceBlock.valid && replaceBlock.modified) { // write back to memory
 		this->writeBlockToLowerLevel(replaceBlock);
