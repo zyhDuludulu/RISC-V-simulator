@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
         return -1;
     }
     if (myIPolicyString == "") {
-        std::cout << "Wrong inclusion policy type!";
+        std::cout << "Wrong inclusion policy type!\n";
         return -1;
     }
     //inclusionPolicy testPolicy = EXCLUSIVE;
@@ -44,6 +44,7 @@ int main(int argc, char** argv) {
     l1policy.associativity = 2;
     l1policy.hitLatency = 2;
     l1policy.missLatency = 8;
+
     l2policy.cacheSize = 16;
     l2policy.blockSize = 2;
     l2policy.blockNum = 8;

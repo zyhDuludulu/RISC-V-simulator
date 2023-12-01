@@ -321,9 +321,8 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 	}
 	if (iPolicy == EXCLUSIVE && this->upperCache == nullptr && this->lowerCache != nullptr) {
 		uint32_t lowerBlockId = this->lowerCache->getBlockId(addr);
-		if (lowerBlockId != -1) {
-			this->lowerCache->blocks[lowerBlockId].valid = false;
-		}
+		if (lowerBlockId != -1) { this->lowerCache->blocks[lowerBlockId].valid = false; }
+		this->writeBlockToLowerLevel(replaceBlock);
 	}
 	if (this->writeBack && replaceBlock.valid && replaceBlock.modified) { // write back to memory
 		this->writeBlockToLowerLevel(replaceBlock);
