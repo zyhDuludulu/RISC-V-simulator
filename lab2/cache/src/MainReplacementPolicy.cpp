@@ -21,14 +21,18 @@ bool parseParameters(int argc, char** argv);
 void printUsage();
 
 const char* traceFilePath;
-replacementPolicy replacementPolicyList[] = { RRIP, LRU };
-std::string replacementPolicyString[] = { "RRIP", "LRU" };
+replacementPolicy replacementPolicyList[] = { RRIP, LRU, OPTIMAL };
+std::string replacementPolicyString[] = { "RRIP", "LRU", "OPTIMAL"};
 replacementPolicy myRPolicy = LRU;
 std::string myRPolicyString;
 
 int main(int argc, char** argv) {
     if (!parseParameters(argc, argv)) {
         printUsage();
+        return -1;
+    }
+    if (myRPolicyString == "") {
+        std::cout << "Wrong replacement policy type!\n";
         return -1;
     }
     std::cout << "replacement Policy: " << myRPolicyString << std::endl;
