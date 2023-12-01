@@ -36,12 +36,8 @@ bool Cache::inCache(uint32_t addr) {
 uint32_t Cache::getVictimBlockId(uint32_t addr) {
 	uint32_t tag = this->getTag(addr);
 	uint32_t id = this->getId(addr);
-	for (uint32_t i = id * policy.associativity; i < (id + 1) * policy.associativity; ++i) {
-		if (this->blocks[i].id != id) {
-			fprintf(stderr, "Inconsistent ID in block %d\n", i);
-			exit(-1);
-		}
-		if (this->blocks[i].valid && this->blocks[i].tag == tag) { return id; }
+	for (uint32_t i = 0; i < policy.associativity; ++i) {
+		if (this->blocks[i].valid && this->blocks[i].tag == tag) { return i; }
 	}
 	return -1;
 }
