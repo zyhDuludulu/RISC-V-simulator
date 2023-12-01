@@ -93,6 +93,10 @@ int main(int argc, char** argv) {
     // Output Simulation Results
     printf("L1 Cache:\n");
     l1cache->printStatistics();
+    if (with_victim) {
+        l1cache->victim->printStatistics();
+        delete l1cache->victim;
+    }
 
     delete l1cache;
     delete l2cache;
