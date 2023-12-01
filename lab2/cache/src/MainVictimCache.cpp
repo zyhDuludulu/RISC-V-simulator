@@ -39,15 +39,17 @@ int main(int argc, char** argv) {
     l1policy.associativity = 8;
     l1policy.hitLatency = 2;
     l1policy.missLatency = 8;
+
     l2policy.cacheSize = 256 * 1024;
     l2policy.blockSize = 64;
     l2policy.blockNum = 256 * 1024 / 64;
     l2policy.associativity = 8;
     l2policy.hitLatency = 8;
     l2policy.missLatency = 100;
-    victpolicy.cacheSize = 128;
-    victpolicy.blockSize = 32;
-    victpolicy.blockNum = 128 / 32;
+
+    victpolicy.cacheSize = 1024;
+    victpolicy.blockSize = 64;
+    victpolicy.blockNum = 1024 / 64;
     victpolicy.associativity = victpolicy.blockNum;
     victpolicy.hitLatency = 1;
     victpolicy.missLatency = 1;
