@@ -102,8 +102,9 @@ bool parseParameters(int argc, char** argv) {
     // Read Parameters
     if (argc > 1) {
         traceFilePath = argv[1];
-        if (argc > 2 && argv[2] == "V") {
-            with_victim = true;
+        if (argc > 2) {
+            std::string victString = argv[2];
+            if (victString == std::string("V")) { with_victim = true; }
         }
         return true;
     }
