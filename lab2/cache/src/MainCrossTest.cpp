@@ -27,9 +27,9 @@ std::string inlcusionPolicyString[] = { "INCLUSIVE", "EXCLUSIVE", "NON-INCLUSIVE
 int main(int argc, char** argv) {
     if (!parseParameters(argc, argv)) {
         printUsage();
-        return -1;
+        //return -1;
     }
-    //traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/cross.trace";
+    traceFilePath = "D:/Course/CS211/cs211-lab/lab2/cache/cache-trace/cross.trace";
     for (int i = 0; i < 2; ++i) {
         for (int j = 0; j < 3; ++j) {
             for (int k = 0; k < 2; ++k) {
@@ -44,13 +44,13 @@ int main(int argc, char** argv) {
                 l1policy.cacheSize = 2 * 1024;
                 l1policy.blockSize = 16;
                 l1policy.blockNum = 2 * 1024 / 16;
-                l1policy.associativity = ASSOCIATIVITY;
+                l1policy.associativity = 4;
                 l1policy.hitLatency = 2;
                 l1policy.missLatency = 8;
                 l2policy.cacheSize = 8 * 1024;
                 l2policy.blockSize = 16;
                 l2policy.blockNum = 8 * 1024 / 16;
-                l2policy.associativity = ASSOCIATIVITY;
+                l2policy.associativity = 4;
                 l2policy.hitLatency = 8;
                 l2policy.missLatency = 100;
 
@@ -61,6 +61,7 @@ int main(int argc, char** argv) {
                 memory = new MemoryManager();
                 l2cache = new Cache(memory, l2policy);
                 l1cache = new Cache(memory, l1policy, l2cache);
+                l2cache->setUpperCache(l1cache);
                 l1cache->rPolicy = l1replacementPolicy;
                 l2cache->rPolicy = l2replacementPolicy;
                 l1cache->iPolicy = inclusionPolicy;

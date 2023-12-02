@@ -287,8 +287,10 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 		}
 		else {
 			b.data[i - blockAddrBegin] = this->lowerCache->getByte(i, cycles);
-			lowerCache->blocks[lowerCache->getBlockId(i)].upperLevelBlockID = b.id; // for inclusive
 		} 
+	}
+	if (this->lowerCache != nullptr) {
+		lowerCache->blocks[lowerCache->getBlockId(addr)].upperLevelBlockID = b.id; // for inclusive
 	}
 
 	// Find replace block
@@ -311,7 +313,7 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 		this->victim->victim_index = (this->victim->victim_index + 1) % this->victim->policy.associativity;
 	}
 
-	if (iPolicy == INCLUSIVE && this->upperCache != nullptr && replaceBlock.upperLevelBlockID != -1) { // Back invalidation
+	if (iPolicy == INCLUSIVE && this->upperCache != nullptr && replaceBlock.upperLevelBlockID != -1 && replaceBlock.valid) { // Back invalidation
 		Block upperreplaceBlock = this->upperCache->blocks[replaceBlock.upperLevelBlockID];
 		if (upperCache->writeBack && upperreplaceBlock.valid && upperreplaceBlock.modified) {
 			upperCache->writeBlockToLowerLevel(upperreplaceBlock);
