@@ -33,7 +33,7 @@ int main(int argc, char** argv) {
         std::cout << "without victim cache" << std::endl;
 
     Cache::Policy l1policy, l2policy, victpolicy;
-    l1policy.cacheSize = 2 * 1024;
+    l1policy.cacheSize = 4 * 1024;
     l1policy.blockSize = 64;
     l1policy.blockNum = 2 * 1024 / 64;
     l1policy.associativity = 8;
