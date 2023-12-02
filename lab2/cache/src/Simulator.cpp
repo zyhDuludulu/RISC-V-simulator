@@ -107,7 +107,6 @@ void Simulator::simulate() {
 			this->reg[0] = 0;
 			// this->panic("Register 0's value is not zero!\n");
 		}
-
 		if (this->reg[REG_SP] < this->stackBase - this->maximumStackSize) {
 			this->panic("Stack Overflow!\n");
 		}
@@ -122,6 +121,7 @@ void Simulator::simulate() {
 		this->fetch();
 		this->decode();
 		this->excecute();
+		if (endFlag) { return; }
 		this->memoryAccess();
 		this->writeBack();
 
@@ -1286,6 +1286,10 @@ int64_t Simulator::handleSystemCall(int64_t op1, int64_t op2) {
 			this->dumpHistory();
 		}
 		this->printStatistics();
+		if (isCrossTest) {
+			endFlag = true;
+			return 0;
+		}
 		exit(0);
 	case 4: // read char
 		scanf(" %c", (char*)&op1);

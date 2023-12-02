@@ -56,6 +56,8 @@ add_executable(
     src/MainCrossTest.cpp
     src/MemoryManager.cpp
     src/Cache.cpp
+    src/Simulator.cpp 
+    src/BranchPredictor.cpp 
 )
 
 add_executable(ToDirenoTrace src/ToDirenoTrace.cpp)
