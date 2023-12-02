@@ -81,7 +81,7 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 	// victim
 	if (this->victim != nullptr) {
 		uint32_t victId = this->victim->getVictimBlockId(addr);
-		if (victId != -1) {
+		if (victId != -1 && this->victim->blocks[victId].valid && !this->victim->blocks[victId].modified) {
 			this->victim->statistics.numHit++;
 			this->statistics.numHit++;
 			this->statistics.totalCycles++;
@@ -97,7 +97,7 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 			b.tag = this->getTag(addr);
 			b.id = this->getId(addr);
 			b.size = this->policy.blockSize;
-			b.data = std::vector<uint8_t>(b.size);
+			b.data = this->victim->blocks[victId].data;
 			if (this->writeBack && replaceBlock.valid && replaceBlock.modified) { // write back to memory
 				this->writeBlockToLowerLevel(replaceBlock);
 				this->statistics.totalCycles += this->policy.missLatency;
@@ -106,6 +106,7 @@ uint8_t Cache::getByte(uint32_t addr, uint32_t* cycles) {
 			this->blocks[replaceId] = b;
 			uint32_t offset = this->getOffset(addr);
 			this->blocks[replaceId].lastReference = this->referenceCounter;
+			this->victim->blocks[victId].valid = false;
 			return this->blocks[replaceId].data[offset];
 		}
 	}
@@ -301,14 +302,14 @@ void Cache::loadBlockFromLowerLevel(uint32_t addr, uint32_t* cycles) {
 	Block replaceBlock = this->blocks[replaceId];
 
 	// victim
-	if (this->victim != nullptr && replaceBlock.valid) {
+	if (this->victim != nullptr && replaceBlock.valid && !replaceBlock.modified) {
 		Block b;
 		b.valid = true;
 		b.modified = replaceBlock.modified;
 		b.tag = (replaceBlock.tag << log2i(policy.blockNum / policy.associativity)) + replaceBlock.id;
 		b.id = 0;
 		b.size = this->victim->policy.blockSize;
-		b.data = std::vector<uint8_t>(b.size);
+		b.data = replaceBlock.data;
 		this->victim->blocks[this->victim->victim_index] = b;
 		this->victim->victim_index = (this->victim->victim_index + 1) % this->victim->policy.associativity;
 	}
