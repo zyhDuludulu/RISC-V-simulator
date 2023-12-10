@@ -50,3 +50,8 @@ void print_f(float num)
     asm("li a7, 6;"
         "scall");
 }
+
+void syscall() {
+    asm("li a7 7";
+        "scall");
+}
