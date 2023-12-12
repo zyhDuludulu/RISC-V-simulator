@@ -7,9 +7,6 @@ int main() {
     int y = a - b;
     print_d(y);
     print_c('\n');
-    int z = c * d;
-    print_d(z);
-    print_c('\n');
     print_s("trap begins here\n");
     syscall();
     print_s("trap ends here\n");
