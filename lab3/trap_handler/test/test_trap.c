@@ -10,9 +10,6 @@ int main() {
     print_s("trap begins here\n");
     syscall();
     print_s("trap ends here\n");
-    x = d / c;
-    print_d(x);
-    print_c('\n');
     y = d << f;
     print_d(y); 
     print_c('\n');
