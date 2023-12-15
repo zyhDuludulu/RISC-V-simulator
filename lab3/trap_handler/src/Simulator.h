@@ -166,6 +166,8 @@ public:
   bool isSingleStep;
   bool verbose;
   bool shouldDumpHistory;
+  bool isTrap = false;
+  bool isEnd = false;
   uint64_t pc;
   uint64_t predictedPC; // for branch prediction module, predicted PC destination
   uint64_t anotherPC; // // another possible prediction destination

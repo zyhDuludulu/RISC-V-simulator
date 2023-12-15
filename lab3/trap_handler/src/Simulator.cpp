@@ -10,6 +10,9 @@
 #include "Debug.h"
 #include "Simulator.h"
 
+void syscall();
+void syscallLoadElfToMemory(ELFIO::elfio* reader, MemoryManager* memory);
+
 namespace RISCV {
 
 	const char* REGNAME[32] = {
@@ -122,6 +125,7 @@ void Simulator::simulate() {
 		this->fetch();
 		this->decode();
 		this->excecute();
+		if (isEnd) return;
 		this->memoryAccess();
 		this->writeBack();
 
@@ -794,11 +798,9 @@ void Simulator::excecute() {
 		}
 		break;
 	case BLTU:
-		//std::cout << "bltu " << op1 << "  " << op2 << std::endl;
 		if ((uint64_t)op1 < (uint64_t)op2) {
 			branch = true;
 			dRegPC = dRegPC + offset;
-			//std::cout << "PC:" << dRegPC << std::endl;
 		}
 		break;
 	case BGEU:
@@ -960,6 +962,10 @@ void Simulator::excecute() {
 		break;
 	case ECALL:
 		out = handleSystemCall(op1, op2);
+		if (out == -1) {
+			this->isEnd = true;
+			return;
+		}
 		writeReg = true;
 		break;
 	default:
@@ -1102,7 +1108,6 @@ void Simulator::memoryAccess() {
 	}
 
 	if (readMem) {
-		//std::cout << "ADDRADDRADDRADDRADDRADDRADDR:                      " << out << std::endl;
 		switch (memLen) {
 		case 1:
 			if (readSignExt) {
@@ -1285,8 +1290,8 @@ int64_t Simulator::handleSystemCall(int64_t op1, int64_t op2) {
 			printf("Dumping history to dump.txt...");
 			this->dumpHistory();
 		}
-		this->printStatistics();
-		exit(0);
+		if (!this->isTrap) { this->printStatistics(); }
+		return -1;
 	case 4: // read char
 		scanf(" %c", (char*)&op1);
 		break;
@@ -1295,6 +1300,9 @@ int64_t Simulator::handleSystemCall(int64_t op1, int64_t op2) {
 		break;
 	case 6: // print float
 		printf("%f", (float)arg1);
+		break;
+	case 7: // syscall
+		syscall();
 		break;
 	default:
 		this->panic("Unknown syscall type %d\n", type);
@@ -1383,4 +1391,79 @@ void Simulator::panic(const char* format, ...) {
 	this->dumpHistory();
 	fprintf(stderr, "Execution history and memory dump in dump.txt\n");
 	exit(-1);
+}
+
+void syscall() {
+	char* elfFile = "D:/Course/CS211/cs211-lab/lab3/trap_handler/riscv-elf/kernel.riscv";
+	MemoryManager trap_memory;
+	Cache* l1Cache;
+	BranchPredictor::Strategy strategy = BranchPredictor::Strategy::NT;
+	BranchPredictor branchPredictor;
+	Simulator trap_simulator(&trap_memory, &branchPredictor);
+
+	Cache::Policy l1Policy;
+
+	l1Policy.cacheSize = 32 * 1024;
+	l1Policy.blockSize = 64;
+	l1Policy.blockNum = l1Policy.cacheSize / l1Policy.blockSize;
+	l1Policy.associativity = 8;
+	l1Policy.hitLatency = 0;
+	l1Policy.missLatency = 8;
+
+	l1Cache = new Cache(&trap_memory, l1Policy);
+	trap_memory.setCache(l1Cache);
+
+	ELFIO::elfio reader;
+	if (!reader.load(elfFile)) {
+		fprintf(stderr, "Fail to load ELF file %s!\n", elfFile);
+		exit(-1);
+	}
+
+	syscallLoadElfToMemory(&reader, &trap_memory);
+
+	trap_simulator.isSingleStep = false;
+	trap_simulator.verbose = false;
+	trap_simulator.shouldDumpHistory = false;
+	uint32_t stackBaseAddr = 0xF0000000;
+	uint32_t stackSize = 0x400000;
+	trap_simulator.branchPredictor->strategy = strategy;
+	trap_simulator.pc = reader.get_entry();
+	trap_simulator.initStack(stackBaseAddr, stackSize);
+	trap_simulator.isTrap = true;
+	trap_simulator.simulate();
+	delete l1Cache;
+}
+
+void syscallLoadElfToMemory(ELFIO::elfio* reader, MemoryManager* memory) {
+	ELFIO::Elf_Half seg_num = reader->segments.size();
+	for (int i = 0; i < seg_num; ++i) {
+		const ELFIO::segment* pseg = reader->segments[i];
+
+		uint64_t fullmemsz = pseg->get_memory_size();
+		uint64_t fulladdr = pseg->get_virtual_address();
+		// Our 32bit simulator cannot handle this
+		if (fulladdr + fullmemsz > 0xFFFFFFFF) {
+			dbgprintf(
+				"ELF address space larger than 32bit! Seg %d has max addr of 0x%lx\n",
+				i, fulladdr + fullmemsz);
+			exit(-1);
+		}
+
+		uint32_t filesz = pseg->get_file_size();
+		uint32_t memsz = pseg->get_memory_size();
+		uint32_t addr = (uint32_t)pseg->get_virtual_address();
+
+		for (uint32_t p = addr; p < addr + memsz; ++p) {
+			if (!memory->isPageExist(p)) {
+				memory->addPage(p);
+			}
+
+			if (p < addr + filesz) {
+				memory->setByteNoCache(p, pseg->get_data()[p - addr]);
+			}
+			else {
+				memory->setByteNoCache(p, 0);
+			}
+		}
+	}
 }
