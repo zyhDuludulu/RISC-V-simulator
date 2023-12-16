@@ -176,6 +176,7 @@ public:
   uint32_t maximumStackSize;
   MemoryManager *memory;
   BranchPredictor *branchPredictor;
+  char *kernelFile;
 
   Simulator(MemoryManager *memory, BranchPredictor *predictor);
   ~Simulator();

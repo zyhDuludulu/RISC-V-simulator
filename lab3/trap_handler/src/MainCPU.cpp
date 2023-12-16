@@ -22,6 +22,7 @@ void printElfInfo(ELFIO::elfio *reader);
 void loadElfToMemory(ELFIO::elfio *reader, MemoryManager *memory);
 
 char *elfFile = nullptr;
+char *kernelFile = nullptr;
 bool verbose = 0;
 bool isSingleStep = 0;
 bool dumpHistory = 0;
@@ -91,6 +92,7 @@ int main(int argc, char **argv) {
   simulator.shouldDumpHistory = dumpHistory;
   simulator.branchPredictor->strategy = strategy;
   simulator.pc = reader.get_entry();
+  simulator.kernelFile = kernelFile;
   simulator.initStack(stackBaseAddr, stackSize);
   simulator.simulate();
 
@@ -144,6 +146,7 @@ bool parseParameters(int argc, char **argv) {
     } else {
       if (elfFile == nullptr) {
         elfFile = argv[i];
+        kernelFile = argv[i + 1];
       } else {
         return false;
       }

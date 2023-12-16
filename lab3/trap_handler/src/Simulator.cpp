@@ -12,6 +12,7 @@
 
 void syscall();
 void syscallLoadElfToMemory(ELFIO::elfio* reader, MemoryManager* memory);
+char* trapFile;
 
 namespace RISCV {
 
@@ -96,6 +97,7 @@ void Simulator::simulate() {
 	memset(&this->eRegNew, 0, sizeof(this->eRegNew));
 	memset(&this->mReg, 0, sizeof(this->mReg));
 	memset(&this->mRegNew, 0, sizeof(this->mRegNew));
+	trapFile = this->kernelFile;
 
 	// Insert Bubble to later pipeline stages
 	fReg.bubble = true;
@@ -1396,7 +1398,7 @@ void Simulator::panic(const char* format, ...) {
 }
 
 void syscall() {
-	char* elfFile = "D:/Course/CS211/cs211-lab/lab3/trap_handler/riscv-elf/kernel.riscv";
+	char* elfFile = trapFile;
 	MemoryManager trap_memory;
 	Cache* l1Cache;
 	BranchPredictor::Strategy strategy = BranchPredictor::Strategy::NT;
@@ -1423,6 +1425,7 @@ void syscall() {
 
 	syscallLoadElfToMemory(&reader, &trap_memory);
 
+	trap_simulator.kernelFile = trapFile;
 	trap_simulator.isSingleStep = false;
 	trap_simulator.verbose = false;
 	trap_simulator.shouldDumpHistory = false;
