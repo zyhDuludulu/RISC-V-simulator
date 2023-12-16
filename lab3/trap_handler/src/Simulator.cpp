@@ -1285,7 +1285,9 @@ int64_t Simulator::handleSystemCall(int64_t op1, int64_t op2) {
 		break;
 	case 3:
 	case 93: // exit
-		printf("Program exit from an exit() system call\n");
+		if (!this->isTrap) {
+			printf("Program exit from an exit() system call\n");
+		}
 		if (shouldDumpHistory) {
 			printf("Dumping history to dump.txt...");
 			this->dumpHistory();
