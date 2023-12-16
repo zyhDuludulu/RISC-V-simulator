@@ -10,9 +10,7 @@ make
 
 ## Test
 ```
-./Simulator ../riscv-elf/helloworld.riscv
-./Simulator ../riscv-elf/test_arithmetic.riscv
-./Simulator ../riscv-elf/quicksort.riscv
+./Simulator ../riscv-elf/test_trap.riscv ../riscv-elf/kernel.riscv
 ```
 
 ## Usage
