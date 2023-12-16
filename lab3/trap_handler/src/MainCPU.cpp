@@ -114,8 +114,8 @@ bool parseParameters(int argc, char** argv) {
         return false;
     }
     elfFile = argv[1];
-    kernelFile = argv[0];
-    printf("\n%s\n%s\n", elfFile, kernelFile);
+    kernelFile = argv[2];
+    printf("\ntest case: %s\nkernel: %s\n", elfFile, kernelFile);
     return true;
 }
 

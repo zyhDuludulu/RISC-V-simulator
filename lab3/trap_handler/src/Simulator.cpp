@@ -95,7 +95,11 @@ void Simulator::simulate() {
 	memset(&this->eRegNew, 0, sizeof(this->eRegNew));
 	memset(&this->mReg, 0, sizeof(this->mReg));
 	memset(&this->mRegNew, 0, sizeof(this->mRegNew));
+<<<<<<< HEAD
 
+=======
+	
+>>>>>>> 27c55b36cbc6547ef8e9f43d33520e460b92759c
 	// Insert Bubble to later pipeline stages
 	fReg.bubble = true;
 	dReg.bubble = true;
