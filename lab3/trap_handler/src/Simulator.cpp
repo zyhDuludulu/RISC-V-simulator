@@ -95,7 +95,6 @@ void Simulator::simulate() {
 	memset(&this->eRegNew, 0, sizeof(this->eRegNew));
 	memset(&this->mReg, 0, sizeof(this->mReg));
 	memset(&this->mRegNew, 0, sizeof(this->mRegNew));
-	trapFile = this->kernelFile;
 
 	// Insert Bubble to later pipeline stages
 	fReg.bubble = true;
