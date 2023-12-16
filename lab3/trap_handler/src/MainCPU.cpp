@@ -107,12 +107,16 @@ int main(int argc, char **argv) {
   return 0;
 }
 
-bool parseParameters(int argc, char **argv) {
-    if (argc != 2) {
+bool parseParameters(int argc, char** argv) {
+    if (argc != 3) {
+        printf("%d", argc);
         printf("wrong parameters number\n");
+        return false;
     }
-    elfFile = argv[0];
-    kernelFile = argv[1];
+    elfFile = argv[1];
+    kernelFile = argv[0];
+    printf("\n%s\n%s\n", elfFile, kernelFile);
+    return true;
 }
 
 void printUsage() {

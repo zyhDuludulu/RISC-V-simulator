@@ -191,6 +191,8 @@ public:
 
   void printStatistics();
 
+  void syscall();
+
 private:
   struct FReg {
     // Control Signals

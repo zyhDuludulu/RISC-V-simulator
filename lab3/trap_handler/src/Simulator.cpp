@@ -10,9 +10,7 @@
 #include "Debug.h"
 #include "Simulator.h"
 
-void syscall();
 void syscallLoadElfToMemory(ELFIO::elfio* reader, MemoryManager* memory);
-char* trapFile;
 
 namespace RISCV {
 
@@ -1397,8 +1395,8 @@ void Simulator::panic(const char* format, ...) {
 	exit(-1);
 }
 
-void syscall() {
-	char* elfFile = trapFile;
+void Simulator::syscall() {
+	char* elfFile = this->kernelFile;
 	MemoryManager trap_memory;
 	Cache* l1Cache;
 	BranchPredictor::Strategy strategy = BranchPredictor::Strategy::NT;
@@ -1425,7 +1423,7 @@ void syscall() {
 
 	syscallLoadElfToMemory(&reader, &trap_memory);
 
-	trap_simulator.kernelFile = trapFile;
+	trap_simulator.kernelFile = kernelFile;
 	trap_simulator.isSingleStep = false;
 	trap_simulator.verbose = false;
 	trap_simulator.shouldDumpHistory = false;
