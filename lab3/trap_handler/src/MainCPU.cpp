@@ -108,54 +108,11 @@ int main(int argc, char **argv) {
 }
 
 bool parseParameters(int argc, char **argv) {
-  // Read Parameters
-  for (int i = 1; i < argc; ++i) {
-    if (argv[i][0] == '-') {
-      switch (argv[i][1]) {
-      case 'v':
-        verbose = 1;
-        break;
-      case 's':
-        isSingleStep = 1;
-        break;
-      case 'd':
-        dumpHistory = 1;
-        break;
-      case 'b':
-        if (i + 1 < argc) {
-          std::string str = argv[i + 1];
-          i++;
-          if (str == "AT") {
-            strategy = BranchPredictor::Strategy::AT;
-          } else if (str == "NT") {
-            strategy = BranchPredictor::Strategy::NT;
-          } else if (str == "BTFNT") {
-            strategy = BranchPredictor::Strategy::BTFNT;
-          } else if (str == "BPB") {
-            strategy = BranchPredictor::Strategy::BPB;
-          } else {
-            return false;
-          }
-        } else {
-          return false;
-        }
-        break;
-      default:
-        return false;
-      }
-    } else {
-      if (elfFile == nullptr) {
-        elfFile = argv[i];
-        kernelFile = argv[i + 1];
-      } else {
-        return false;
-      }
+    if (argc != 2) {
+        printf("wrong parameters number\n");
     }
-  }
-  if (elfFile == nullptr) {
-    return false;
-  }
-  return true;
+    elfFile = argv[0];
+    kernelFile = argv[1];
 }
 
 void printUsage() {
