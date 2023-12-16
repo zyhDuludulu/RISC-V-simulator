@@ -1,0 +1,62 @@
+[
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\Simulator.dir\\src\\MainCPU.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MainCPU.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MainCPU.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\Simulator.dir\\src\\MemoryManager.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MemoryManager.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MemoryManager.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\Simulator.dir\\src\\Simulator.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Simulator.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Simulator.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\Simulator.dir\\src\\BranchPredictor.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\BranchPredictor.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\BranchPredictor.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\Simulator.dir\\src\\Cache.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Cache.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Cache.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\CacheSim.dir\\src\\MainCache.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MainCache.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MainCache.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\CacheSim.dir\\src\\MemoryManager.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MemoryManager.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MemoryManager.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\CacheSim.dir\\src\\Cache.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Cache.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Cache.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\CacheOptimized.dir\\src\\MainCacheOptimization.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MainCacheOptimization.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MainCacheOptimization.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\CacheOptimized.dir\\src\\MemoryManager.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MemoryManager.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\MemoryManager.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\CacheOptimized.dir\\src\\Cache.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Cache.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\Cache.cpp"
+},
+{
+  "directory": "D:/Course/CS211/cs211-lab/lab3/out_of_order/build",
+  "command": "C:\\mingw\\mingw64\\bin\\c++.exe -ID:/Course/CS211/cs211-lab/lab3/out_of_order/include -O2 -Wall -std=gnu++11 -o CMakeFiles\\ToDirenoTrace.dir\\src\\ToDirenoTrace.cpp.obj -c D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\ToDirenoTrace.cpp",
+  "file": "D:\\Course\\CS211\\cs211-lab\\lab3\\out_of_order\\src\\ToDirenoTrace.cpp"
+}
+]
