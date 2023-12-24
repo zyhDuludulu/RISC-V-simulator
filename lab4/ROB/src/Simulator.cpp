@@ -100,7 +100,7 @@ void Simulator::simulate() {
 		//std::cout << std::hex << this->pc << std::endl;
 		//for (int i = 0; i < 32; ++i) { std::cout << reg[i] << " "; }
 		//std::cout << std::endl;
-		//if (pc == 0x1025c) {
+		//if (pc == 0x1028c) {
 		//	int a = 1;
 		//}
 		this->issue();
@@ -663,6 +663,9 @@ void Simulator::issue() {
 			registerStat[rd].reorder = b;
 			registerStat[rd].busy = true;
 			ROB[b].dest = rd;
+			if (isBranch(insttype)) {
+				registerStat[rd].busy = false;
+			}
 			break;
 		}
 		//std::cout << "rs1 " << 
@@ -951,6 +954,13 @@ void Simulator::wb() {
 		else {
 			int temp = RS[i].dest;
 			RS[i].busy = false;
+			if (isBranch(RS[i].insttype)) {
+				ROB[temp].ready = true;
+				ROB[temp].value = RS[i].result;
+				ROB[temp].op2 = RS[i].Vk;
+				continue;
+			}
+			
 			if (registerStat[1].busy && temp == registerStat[1].reorder && ROB[temp].insttype == JALR) {
 				pc = (RS[i].Vj + RS[i].Vk) & (~(uint64_t)1);
 			}
