@@ -86,6 +86,7 @@ void Simulator::initStack(uint32_t baseaddr, uint32_t maxSize) {
 
 void Simulator::simulate() {
 	// Main Simulation Loop
+	int count = 0;
 	while (true) {
 		if (this->reg[0] != 0) {
 			// Some instruction might set this register to zero
@@ -100,8 +101,13 @@ void Simulator::simulate() {
 		//std::cout << std::hex << this->pc << std::endl;
 		//for (int i = 0; i < 32; ++i) { std::cout << reg[i] << " "; }
 		//std::cout << std::endl;
-		//if (pc == 0x104ec) {
+		//if (pc == 0x10498) {
 		//	int a = 1;
+		//}
+		//if (count++ >= 1000) {
+		//	//for (int i = 0; i < 32; ++i) { std::cout << reg[i] << " "; }
+		//	//std::cout << std::endl;
+		//	exit(-1);
 		//}
 		this->issue();
 		this->exe();
@@ -623,6 +629,7 @@ void Simulator::issue() {
 				if (ROB[temp].ready) {
 					RS[r].Vk = ROB[temp].value;
 					RS[r].Qk = -1;
+					if (ROB[temp].opcode == OP_LOAD) { RS[r].Qk = temp; }
 				}
 				else { RS[r].Qk = temp; }
 				if (rs2 == 0) {
@@ -692,8 +699,8 @@ void Simulator::issue() {
 			op1, op2, offset);
 		this->predictbranch = predictedBranch;
 		if (predictedBranch) {
-			this->pc = this->pc + offset;
 			this->anotherPC = this->pc + 4;
+			this->pc = this->pc + offset;
 		}
 		else {
 			this->anotherPC = this->pc + offset;
@@ -706,7 +713,6 @@ void Simulator::issue() {
 			if (registerStat[1].busy) { return; }
 			pc = (op1 + op2) & (~(uint64_t)1); 
 		}
-		int a = 1;
 	}
 	else { pc = pc + 4; }
 }
@@ -721,10 +727,6 @@ void Simulator::exe() {
 		int64_t op2 = RS[i].Vk;
 		int64_t out = 0;
 		uint64_t dRegPC = RS[i].pc;
-		int32_t imm_s =
-			int32_t(((RS[i].inst >> 7) & 0x1F) | ((RS[i].inst >> 20) & 0xFE0)) << 20 >> 20;
-		bool writeMem = false;
-		bool readMem = false;
 		switch (RS[i].insttype) {
 		case LUI:
 			out = op1 << 12;
@@ -734,12 +736,10 @@ void Simulator::exe() {
 			break;
 		case JAL:
 			out = dRegPC + 4;
-			dRegPC = dRegPC + op1;
 			branch = true;
 			break;
 		case JALR:
 			out = dRegPC + 4;
-			dRegPC = (op1 + op2) & (~(uint64_t)1);
 			branch = true;
 			break;
 		case BEQ:
@@ -834,72 +834,45 @@ void Simulator::exe() {
 		case ECALL:
 			out = handleSystemCall(op1, op2);
 			break;
-			// TODO: should be handled in memory access
-			// and save the result in the rs
 		case LB:
-			readMem = true;
-			memLen = 1;
-			out = op1 + op2;
+			ld_memLen = 1;
 			readSignExt = true;
 			break;
 		case LH:
-			readMem = true;
-			memLen = 2;
-			out = op1 + op2;
+			ld_memLen = 2;
 			readSignExt = true;
 			break;
 		case LW:
-			readMem = true;
-			memLen = 4;
-			out = op1 + op2;
+			ld_memLen = 4;
 			readSignExt = true;
 			break;
 		case LD:
-			readMem = true;
-			memLen = 8;
-			out = op1 + op2;
+			ld_memLen = 8;
 			readSignExt = true;
 			break;
 		case LBU:
-			readMem = true;
-			memLen = 1;
-			out = op1 + op2;
+			ld_memLen = 1;
 			readSignExt = false;
 			break;
 		case LHU:
-			readMem = true;
-			memLen = 2;
-			out = op1 + op2;
+			ld_memLen = 2;
 			readSignExt = false;
 			break;
 		case LWU:
-			readMem = true;
-			memLen = 4;
-			out = op1 + op2;
+			ld_memLen = 4;
 			readSignExt = false;
 			break;
 		case SB:
-			writeMem = true;
-			memLen = 1;
-			out = op1 + imm_s;
-			op2 = op2 & 0xFF;
+			st_memLen = 1;
 			break;
 		case SH:
-			writeMem = true;
-			memLen = 2;
-			out = op1 + imm_s;
-			op2 = op2 & 0xFFFF;
+			st_memLen = 2;
 			break;
 		case SW:
-			writeMem = true;
-			memLen = 4;
-			out = op1 + imm_s;
-			op2 = op2 & 0xFFFFFFFF;
+			st_memLen = 4;
 			break;
 		case SD:
-			writeMem = true;
-			memLen = 8;
-			out = op1 + imm_s;
+			st_memLen = 8;
 			break;
 		default:
 			this->panic("Unknown instruction type %d\n", RS[i].insttype);
@@ -915,21 +888,18 @@ void Simulator::wb() {
 	for (int i = 0; i < number_of_component; ++i) {
 		if (!RS[i].busy || RS[i].Qj != -1 || RS[i].Qk != -1 || RS[i].isNew || RS[i].time > -1) { continue; }
 		if (RS[i].opcode == OP_STORE) {
-			if (RS[i].Qk == -1) {
-				ROB[RS[i].dest].value = RS[i].Vk; // ?
-				ROB[RS[i].dest].ready = true;
-			}
+			ROB[RS[i].dest].value = RS[i].Vk;
+			ROB[RS[i].dest].ready = true;
 		}
 		else {
 			int temp = RS[i].dest;
-			RS[i].busy = false;
 			if (isBranch(RS[i].insttype)) {
 				ROB[temp].ready = true;
 				ROB[temp].value = RS[i].result;
 				ROB[temp].op2 = RS[i].Vk;
 				continue;
 			}
-			
+			RS[i].busy = false;
 			if (registerStat[1].busy && temp == registerStat[1].reorder && ROB[temp].insttype == JALR) {
 				pc = (RS[i].Vj + RS[i].Vk) & (~(uint64_t)1);
 			}
@@ -955,18 +925,16 @@ void Simulator::wb() {
 
 void Simulator::commit() {
 	// from the head of the ROB
-	if (!ROB[h].ready || !ROB[h].busy) { return; }
+	if (!ROB[h].busy || !ROB[h].ready) { return; }
 	int d = ROB[h].dest;
 	if (isBranch(ROB[h].insttype)) {
-		if (predictbranch != branch) { // mis-prediction
-			//std::cout << "predict: " << predictbranch << "  branch: " << branch << std::endl;
-			//std::cout << "MIS_PREDICTION TO PC: " << this->pc << std::endl;
-			//std::cout << "SHOULD BE: " << this->anotherPC << std::endl;
+		RS[3].busy = false;
+		if (predictbranch != branch) {
 			for (int i = 0; i < 32; ++i) {
 				ROB[i].busy = false;
+				registerStat[i].busy = false;
 				b = 0;
 				h = 0;
-				registerStat[i].busy = false;
 			}
 			for (int i = 0; i < number_of_component; ++i) { RS[i].busy = false; }
 			// update the pc
@@ -977,8 +945,7 @@ void Simulator::commit() {
 	else if (ROB[h].opcode == OP_STORE) {
 		bool good = true;
 		uint32_t cycles = 0;
-		//std::cout << "store at: " << ROB[h].address << " value:" << ROB[h].value << " len: " << memLen << std::endl;
-		switch (memLen) {
+		switch (st_memLen) {
 		case 1:
 			good = this->memory->setByte(ROB[h].address, ROB[h].value, &cycles);
 			break;
@@ -992,14 +959,14 @@ void Simulator::commit() {
 			good = this->memory->setLong(ROB[h].address, ROB[h].value, &cycles);
 			break;
 		default:
-			this->panic("Unknown memLen %d\n", memLen);
+			this->panic("Unknown memLen %d\n", st_memLen);
 		}
 		if (!good) { this->panic("Invalid Mem Access!\n"); }
 		RS[1].busy = false;
 	}
 	else if (ROB[h].opcode == OP_LOAD) {
 		uint32_t cycles = 0;
-		switch (memLen) {
+		switch (ld_memLen) {
 		case 1:
 			if (readSignExt) { reg[d] = (int64_t)this->memory->getByte(ROB[h].address, &cycles); }
 			else { reg[d] = (uint64_t)this->memory->getByte(ROB[h].address, &cycles); }
@@ -1017,7 +984,7 @@ void Simulator::commit() {
 			else { reg[d] = (uint64_t)this->memory->getLong(ROB[h].address, &cycles); }
 			break;
 		default:
-			this->panic("Unknown memLen %d\n", memLen);
+			this->panic("Unknown memLen %d\n", ld_memLen);
 		}
 		for (int j = 0; j < number_of_component; ++j) {
 			int temp = RS[2].dest;
@@ -1032,14 +999,12 @@ void Simulator::commit() {
 			}
 		}
 		RS[2].busy = false;
-		//std::cout << "load at: " << ROB[h].address << " value:" << reg[d] << " len: " << memLen << std::endl;
 	}
 	else { reg[d] = ROB[h].value; }
 	ROB[h].busy = false;
 	if (registerStat[d].reorder == h) {
 		registerStat[d].busy = false;
 	}
-	//std::cout << "ROB commit at " << h << std::endl;
 	h = (h + 1) % 32;
 }
 

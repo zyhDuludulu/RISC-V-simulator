@@ -245,7 +245,7 @@ private:
 	RegisterStatus registerStat[32];
 	int h = 0, b = 0;
 	bool predictbranch, branch, readSignExt;
-	uint32_t memLen = 0;
+	uint32_t st_memLen = 0, ld_memLen;
 
 	// The lowest cycle of an datamem access
 	const uint32_t datamem_lat_lower_bound = 1;
