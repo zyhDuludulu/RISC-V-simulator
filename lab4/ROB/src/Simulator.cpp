@@ -100,7 +100,7 @@ void Simulator::simulate() {
 		//std::cout << std::hex << this->pc << std::endl;
 		//for (int i = 0; i < 32; ++i) { std::cout << reg[i] << " "; }
 		//std::cout << std::endl;
-		//if (pc == 0x1028c) {
+		//if (pc == 0x104ec) {
 		//	int a = 1;
 		//}
 		this->issue();
@@ -717,7 +717,6 @@ void Simulator::exe() {
 		if (!RS[i].busy || RS[i].Qj != -1 || RS[i].Qk != -1) { continue; }
 		if (RS[i].time != 0) { --RS[i].time; continue; }
 		RS[i].time--;
-		bool writeReg = false;
 		int64_t op1 = RS[i].Vj;
 		int64_t op2 = RS[i].Vk;
 		int64_t out = 0;
@@ -728,21 +727,17 @@ void Simulator::exe() {
 		bool readMem = false;
 		switch (RS[i].insttype) {
 		case LUI:
-			writeReg = true;
 			out = op1 << 12;
 			break;
 		case AUIPC:
-			writeReg = true;
 			out = dRegPC + (op1 << 12);
 			break;
 		case JAL:
-			writeReg = true;
 			out = dRegPC + 4;
 			dRegPC = dRegPC + op1;
 			branch = true;
 			break;
 		case JALR:
-			writeReg = true;
 			out = dRegPC + 4;
 			dRegPC = (op1 + op2) & (~(uint64_t)1);
 			branch = true;
@@ -773,137 +768,112 @@ void Simulator::exe() {
 			break;
 		case ADDI:
 		case ADD:
-			writeReg = true;
 			out = op1 + op2;
 			break;
 		case ADDIW:
 		case ADDW:
-			writeReg = true;
 			out = (int64_t)((int32_t)op1 + (int32_t)op2);
 			break;
 		case SUB:
-			writeReg = true;
 			out = op1 - op2;
 			break;
 		case SUBW:
-			writeReg = true;
 			out = (int64_t)((int32_t)op1 - (int32_t)op2);
 			break;
 		case MUL:
-			writeReg = true;
 			out = op1 * op2;
 			break;
 		case DIV:
-			writeReg = true;
 			out = op1 / op2;
 			break;
 		case SLTI:
 		case SLT:
-			writeReg = true;
 			out = op1 < op2 ? 1 : 0;
 			break;
 		case SLTIU:
 		case SLTU:
-			writeReg = true;
 			out = (uint64_t)op1 < (uint64_t)op2 ? 1 : 0;
 			break;
 		case XORI:
 		case XOR:
-			writeReg = true;
 			out = op1 ^ op2;
 			break;
 		case ORI:
 		case OR:
-			writeReg = true;
 			out = op1 | op2;
 			break;
 		case ANDI:
 		case AND:
-			writeReg = true;
 			out = op1 & op2;
 			break;
 		case SLLI:
 		case SLL:
-			writeReg = true;
 			out = op1 << op2;
 			break;
 		case SLLIW:
 		case SLLW:
-			writeReg = true;
 			out = int64_t(int32_t(op1 << op2));
 			break;
 			break;
 		case SRLI:
 		case SRL:
-			writeReg = true;
 			out = (uint64_t)op1 >> (uint64_t)op2;
 			break;
 		case SRLIW:
 		case SRLW:
-			writeReg = true;
 			out = uint64_t(uint32_t((uint32_t)op1 >> (uint32_t)op2));
 			break;
 		case SRAI:
 		case SRA:
-			writeReg = true;
 			out = op1 >> op2;
 			break;
 		case SRAW:
 		case SRAIW:
-			writeReg = true;
 			out = int64_t(int32_t((int32_t)op1 >> (int32_t)op2));
 			break;
 		case ECALL:
 			out = handleSystemCall(op1, op2);
-			writeReg = true;
 			break;
 			// TODO: should be handled in memory access
 			// and save the result in the rs
 		case LB:
 			readMem = true;
-			writeReg = true;
 			memLen = 1;
 			out = op1 + op2;
 			readSignExt = true;
 			break;
 		case LH:
 			readMem = true;
-			writeReg = true;
 			memLen = 2;
 			out = op1 + op2;
 			readSignExt = true;
 			break;
 		case LW:
 			readMem = true;
-			writeReg = true;
 			memLen = 4;
 			out = op1 + op2;
 			readSignExt = true;
 			break;
 		case LD:
 			readMem = true;
-			writeReg = true;
 			memLen = 8;
 			out = op1 + op2;
 			readSignExt = true;
 			break;
 		case LBU:
 			readMem = true;
-			writeReg = true;
 			memLen = 1;
 			out = op1 + op2;
 			readSignExt = false;
 			break;
 		case LHU:
 			readMem = true;
-			writeReg = true;
 			memLen = 2;
 			out = op1 + op2;
 			readSignExt = false;
 			break;
 		case LWU:
 			readMem = true;
-			writeReg = true;
 			memLen = 4;
 			out = op1 + op2;
 			readSignExt = false;
@@ -948,7 +918,6 @@ void Simulator::wb() {
 			if (RS[i].Qk == -1) {
 				ROB[RS[i].dest].value = RS[i].Vk; // ?
 				ROB[RS[i].dest].ready = true;
-				RS[i].busy = false;
 			}
 		}
 		else {
@@ -1026,7 +995,7 @@ void Simulator::commit() {
 			this->panic("Unknown memLen %d\n", memLen);
 		}
 		if (!good) { this->panic("Invalid Mem Access!\n"); }
-		
+		RS[1].busy = false;
 	}
 	else if (ROB[h].opcode == OP_LOAD) {
 		uint32_t cycles = 0;
