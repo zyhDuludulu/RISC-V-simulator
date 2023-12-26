@@ -98,17 +98,6 @@ void Simulator::simulate() {
 			this->panic("Stack Overflow!\n");
 		}
 
-		//std::cout << std::hex << this->pc << std::endl;
-		//for (int i = 0; i < 32; ++i) { std::cout << reg[i] << " "; }
-		//std::cout << std::endl;
-		//if (pc == 0x10498) {
-		//	int a = 1;
-		//}
-		//if (count++ >= 1000) {
-		//	//for (int i = 0; i < 32; ++i) { std::cout << reg[i] << " "; }
-		//	//std::cout << std::endl;
-		//	exit(-1);
-		//}
 		this->issue();
 		this->exe();
 		this->wb();
@@ -926,10 +915,13 @@ void Simulator::wb() {
 void Simulator::commit() {
 	// from the head of the ROB
 	if (!ROB[h].busy || !ROB[h].ready) { return; }
+	this->history.instCount++;
 	int d = ROB[h].dest;
 	if (isBranch(ROB[h].insttype)) {
 		RS[3].busy = false;
 		if (predictbranch != branch) {
+			this->history.unpredictedBranch++;
+			this->history.controlHazardCount++;
 			for (int i = 0; i < 32; ++i) {
 				ROB[i].busy = false;
 				registerStat[i].busy = false;
@@ -941,6 +933,7 @@ void Simulator::commit() {
 			this->pc = this->anotherPC;
 			return;
 		}
+		this->history.predictedBranch++;
 	}
 	else if (ROB[h].opcode == OP_STORE) {
 		bool good = true;
